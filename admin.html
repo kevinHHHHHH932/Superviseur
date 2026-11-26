@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow">
+<title>Superviseur · Administration des accès</title>
+<style>
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;background:#f3f5f9;color:#14163a;margin:0;padding:16px;line-height:1.45}
+.w{max-width:720px;margin:0 auto}h1{font-size:22px;margin:6px 0}h2{font-size:12px;text-transform:uppercase;letter-spacing:1.2px;color:#5f6587;margin:22px 0 8px}
+.c{background:#fff;border:1px solid #dde2ec;border-radius:14px;padding:14px;margin-bottom:10px}
+input{width:100%;box-sizing:border-box;border:1px solid #dde2ec;border-radius:10px;padding:11px 12px;font-size:16px}
+button,label.b{display:inline-block;border:none;border-radius:10px;padding:11px 14px;font-weight:700;font-size:15px;background:#1d1677;color:#fff;cursor:pointer;margin:6px 6px 0 0}
+.g{background:#e2f4f0;color:#00927c}.r{background:#d3343e}.s{color:#5f6587;font-size:13px}
+.k{display:flex;align-items:center;gap:10px;border-bottom:1px solid #dde2ec;padding:8px 0}.k:last-child{border:none}.k b{flex:1}
+.code{font-family:ui-monospace,Menlo,monospace;font-size:18px;font-weight:700;background:#fff7e0;border:2px dashed #b7770d;border-radius:10px;padding:10px;text-align:center;margin:8px 0;user-select:all}
+.hide{display:none}.warn{background:#fff4e0;border-color:#f2b33d}
+</style>
+</head>
+<body><div class="w">
+<h1>Superviseur · accès</h1>
+<div class="s">Cette page tourne entièrement sur ton appareil. Elle prépare les fichiers à déposer sur GitHub ; rien n'est envoyé ailleurs.</div>
+
+<div id="s1"><h2>1. Ouvrir avec un code valide</h2><div class="c"><input id="code" placeholder="SV-XXXX-XXXX-XXXX-XXXX" autocapitalize="characters" autocomplete="off"><button id="open">Ouvrir</button><div class="s" id="err" style="color:#d3343e"></div></div></div>
+
+<div id="s2" class="hide">
+ <h2>Codes d'accès actuels</h2><div class="c" id="keys"></div>
+ <h2>Donner un accès</h2><div class="c"><input id="lab" placeholder="Nom de la personne (ex. : Superviseur B.)"><button id="add">Créer un code</button><div id="newc"></div></div>
+ <h2>Contenu (annuaire, fiches…)</h2><div class="c"><div class="s">Exporte le contenu déchiffré pour le modifier (fichier JSON), puis réimporte-le : il sera rechiffré.</div>
+  <button class="g" id="exp">Exporter le contenu</button><label class="b g">Importer le contenu<input type="file" id="imp" accept=".json" class="hide"></label><div class="s" id="impmsg"></div></div>
+ <h2>Publier les changements</h2><div class="c warn"><div class="s" id="chg">Aucun changement.</div>
+  <button id="dlv">Télécharger vault.json</button>
+  <div class="s" style="margin-top:8px">Sur GitHub : dossier <b>vault</b> → <b>Add file › Upload files</b> → dépose <b>vault.json</b> (il remplace l'ancien) → <b>Commit changes</b>. L'appli se met à jour en 1 à 2 minutes.</div></div>
+ <h2>Révocation forte</h2><div class="c"><div class="s">Retirer un code empêche toute nouvelle ouverture avec ce code. Mais un appareil déjà déverrouillé garde l'accès tant que la clé de chiffrement ne change pas. La révocation forte change la clé : <b>tout le monde</b> reçoit un nouveau code (affichés ci-dessous) et doit le ressaisir.</div>
+  <button class="r" id="rot">Changer la clé et tous les codes</button><div id="rotmsg"></div></div>
+</div>
+</div>
+<script>
+(function(){
+const $=id=>document.getElementById(id);const enc=t=>new TextEncoder().encode(t);
+const B=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));
+const E=b=>{let s='';const a=new Uint8Array(b);for(let i=0;i<a.length;i+=8192)s+=String.fromCharCode.apply(null,a.subarray(i,i+8192));return btoa(s)};
+const ncode=c=>String(c||'').toUpperCase().replace(/[^A-Z0-9]/g,'');
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let V=null,DKRAW=null,PAY=null,dirty=[];
+const rnd=n=>crypto.getRandomValues(new Uint8Array(n));
+function genCode(){const a='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';const r=rnd(16);let s='';for(let i=0;i<16;i++){s+=a[r[i]%a.length];if(i%4===3&&i<15)s+='-'}return 'SV-'+s}
+async function kek(code,salt,iter,use){const base=await crypto.subtle.importKey('raw',enc(ncode(code)),'PBKDF2',false,['deriveKey']);return crypto.subtle.deriveKey({name:'PBKDF2',hash:'SHA-256',salt,iterations:iter},base,{name:'AES-GCM',length:256},false,[use])}
+async function wrap(code,label,id,dk){const salt=rnd(16),iv=rnd(12);const k=await kek(code,salt,V.iter,'encrypt');return {id,label,salt:E(salt),iv:E(iv),wk:E(await crypto.subtle.encrypt({name:'AES-GCM',iv},k,dk))}}
+async function aes(raw,use){return crypto.subtle.importKey('raw',raw,'AES-GCM',false,[use])}
+function dl(name,data,type){const u=URL.createObjectURL(new Blob([data],{type}));const a=document.createElement('a');a.href=u;a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(u);a.remove()},4000)}
+const stamp=()=>{const d=new Date(),p=n=>String(n).padStart(2,'0');return `${d.getFullYear()}.${p(d.getMonth()+1)}.${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}`};
+function mark(t){dirty.push(t);$('chg').innerHTML='À publier : '+dirty.map(esc).join(' · ')}
+function render(){$('keys').innerHTML=V.keys.map((k,i)=>`<div class="k"><b>${esc(k.label)}</b><span class="s">${esc(k.id)}</span><button class="r" data-i="${i}" ${V.keys.length<2?'disabled':''}>Retirer</button></div>`).join('');
+ document.querySelectorAll('[data-i]').forEach(b=>b.onclick=()=>{const k=V.keys[+b.dataset.i];if(!confirm('Retirer le code de « '+k.label+' » ?'))return;V.keys.splice(+b.dataset.i,1);mark('code retiré : '+k.label);render()})}
+$('open').onclick=async()=>{$('err').textContent='';try{V=await (await fetch('vault/vault.json',{cache:'no-cache'})).json();
+ for(const k of V.keys){try{const kk=await kek($('code').value,B(k.salt),V.iter,'decrypt');DKRAW=new Uint8Array(await crypto.subtle.decrypt({name:'AES-GCM',iv:B(k.iv)},kk,B(k.wk)));break}catch(e){}}
+ if(!DKRAW){$('err').textContent='Code incorrect.';return}
+ const dk=await aes(DKRAW,'decrypt');PAY=new Uint8Array(await crypto.subtle.decrypt({name:'AES-GCM',iv:B(V.iv),additionalData:enc('superviseur')},dk,B(V.ct)));
+ $('s1').classList.add('hide');$('s2').classList.remove('hide');render()}catch(e){$('err').textContent='Erreur : '+e.message}};
+$('add').onclick=async()=>{const lab=$('lab').value.trim();if(!lab){$('lab').focus();return}const code=genCode();
+ const id='k'+Date.now().toString(36);V.keys.push(await wrap(code,lab,id,DKRAW));mark('nouveau code : '+lab);render();$('lab').value='';
+ $('newc').innerHTML=`<div class="s">Code de <b>${esc(lab)}</b> (affiché une seule fois, transmets-le en main propre ou par message sécurisé) :</div><div class="code">${code}</div>`};
+$('exp').onclick=()=>dl('superviseur_contenu.json',PAY,'application/json');
+$('imp').onchange=async e=>{const f=e.target.files[0];if(!f)return;try{const t=await f.text();const o=JSON.parse(t);if(!o.app||!o.static)throw new Error('format');
+ PAY=enc(JSON.stringify(o));mark('contenu modifié');$('impmsg').textContent='Contenu importé : télécharge vault.json pour publier.'}catch(err){$('impmsg').textContent='Fichier non reconnu.'}};
+async function buildVault(dkraw){const dk=await aes(dkraw,'encrypt');const iv=rnd(12);const ct=await crypto.subtle.encrypt({name:'AES-GCM',iv,additionalData:enc('superviseur')},dk,PAY);return Object.assign({},V,{ver:stamp(),iv:E(iv),ct:E(ct)})}
+$('dlv').onclick=async()=>{const nv=await buildVault(DKRAW);dl('vault.json',JSON.stringify(nv),'application/json');V=nv}
+// --- zip minimal (stockage sans compression)
+const CRC=(()=>{const t=new Uint32Array(256);for(let n=0;n<256;n++){let c=n;for(let k=0;k<8;k++)c=c&1?0xEDB88320^(c>>>1):c>>>1;t[n]=c>>>0}return b=>{let c=0xFFFFFFFF;for(let i=0;i<b.length;i++)c=t[(c^b[i])&255]^(c>>>8);return (c^0xFFFFFFFF)>>>0}})();
+function zip(files){const parts=[],cent=[];let off=0;for(const [name,data] of files){const nb=enc(name),crc=CRC(data);
+ const h=new DataView(new ArrayBuffer(30));h.setUint32(0,0x04034b50,true);h.setUint16(4,20,true);h.setUint32(14,crc,true);h.setUint32(18,data.length,true);h.setUint32(22,data.length,true);h.setUint16(26,nb.length,true);
+ parts.push(new Uint8Array(h.buffer),nb,data);
+ const c=new DataView(new ArrayBuffer(46));c.setUint32(0,0x02014b50,true);c.setUint16(4,20,true);c.setUint16(6,20,true);c.setUint32(16,crc,true);c.setUint32(20,data.length,true);c.setUint32(24,data.length,true);c.setUint16(28,nb.length,true);c.setUint32(42,off,true);
+ cent.push(new Uint8Array(c.buffer),nb);off+=30+nb.length+data.length}
+ const cs=cent.reduce((a,b)=>a+b.length,0);const e=new DataView(new ArrayBuffer(22));e.setUint32(0,0x06054b50,true);e.setUint16(8,files.length,true);e.setUint16(10,files.length,true);e.setUint32(12,cs,true);e.setUint32(16,off,true);
+ return new Blob([...parts,...cent,new Uint8Array(e.buffer)],{type:'application/zip'})}
+$('rot').onclick=async()=>{if(!confirm('Changer la clé ? Tous les appareils devront ressaisir un nouveau code.'))return;
+ const m=$('rotmsg');m.innerHTML='<div class="s">Rechiffrement des 100 pages du classeur…</div>';
+ try{const old=await aes(DKRAW,'decrypt');const nraw=rnd(32);const nk=await aes(nraw,'encrypt');const files=[];
+  for(let i=1;i<=(V.imgs||100);i++){const n='p-'+String(i).padStart(3,'0')+'.bin';const b=new Uint8Array(await (await fetch('vault/'+n+'?v='+encodeURIComponent(V.ver))).arrayBuffer());
+   const pt=await crypto.subtle.decrypt({name:'AES-GCM',iv:b.slice(0,12),additionalData:enc('img')},old,b.slice(12));const iv=rnd(12);const ct=new Uint8Array(await crypto.subtle.encrypt({name:'AES-GCM',iv,additionalData:enc('img')},nk,pt));
+   const out=new Uint8Array(12+ct.length);out.set(iv);out.set(ct,12);files.push(['vault/'+n,out])}
+  const codes=[];const keys=[];for(const k of V.keys){const c=genCode();codes.push([k.label,c]);keys.push(await wrap(c,k.label,k.id,nraw))}
+  V.keys=keys;const nv=await buildVault(nraw);files.unshift(['vault/vault.json',enc(JSON.stringify(nv))]);V=nv;DKRAW=nraw;dirty=[];
+  dl('superviseur_vault.zip',zip(files),'application/zip');
+  m.innerHTML=`<div class="s">Fichier <b>superviseur_vault.zip</b> téléchargé : décompresse-le et dépose tout le contenu du dossier <b>vault</b> sur GitHub (remplace les fichiers). Nouveaux codes, à transmettre à chacun :</div>`+codes.map(([l,c])=>`<div class="s" style="margin-top:6px"><b>${esc(l)}</b></div><div class="code">${c}</div>`).join('');render()}
+ catch(e){m.innerHTML='<div class="s" style="color:#d3343e">Échec : '+esc(e.message)+'</div>'}};
+})();
+</script>
+</body></html>

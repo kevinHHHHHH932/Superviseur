@@ -1,0 +1,2 @@
+{"name":"Superviseur","short_name":"Superviseur","description":"Assistant du superviseur PC Sécurité","lang":"fr","start_url":"./","scope":"./","display":"standalone","orientation":"any","background_color":"#f3f5f9","theme_color":"#1d1677",
+ "icons":[{"src":"icons/icon-192.png","sizes":"192x192","type":"image/png"},{"src":"icons/icon-512.png","sizes":"512x512","type":"image/png"},{"src":"icons/icon-512.png","sizes":"512x512","type":"image/png","purpose":"maskable"}]}
