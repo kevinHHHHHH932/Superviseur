@@ -41,6 +41,6 @@ Ouvre `https://TON-PSEUDO.github.io/superviseur/admin.html` avec ton code.
 ## Limites
 
 - **Synchronisation iPhone ↔ ordinateur** : bouton **Synchro** en haut, à configurer une fois dans **Mémo → Réglages** (dépôt privé `superviseur-data` + jeton GitHub). Données chiffrées. Sans ça : **Exporter / Importer**.
-- **Dictée** : utilise le micro du clavier de l'iPhone. L'analyse de la déclaration se fait sur l'appareil, par mots-clés : vérifie toujours le fait proposé.
+- **Raconter un incident** : sur l'accueil, écris ou dicte (micro 🎙 du clavier) ce qui se passe, comme ça vient. L'appli en tire le fait ISIS, la victime, le lieu, l'heure, les intervenants et l'issue, puis rédige la main courante et le message TCL. « Ajouter la suite » complète la fiche au fil de l'incident. Tout est analysé sur l'appareil, rien n'est envoyé : relis toujours avant de copier.
 - **Effacement des données** : supprimer l'appli de l'écran d'accueil ou effacer les données de Safari efface les incidents et le journal de l'appareil. Exporte régulièrement.
 - **Aide-mémoire** : la référence reste le Référentiel unique. Contenu en **diffusion restreinte** : partage soumis à l'accord de ta hiérarchie.

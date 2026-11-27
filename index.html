@@ -209,6 +209,15 @@ textarea.out2{min-height:96px;font-size:14.5px;line-height:1.45;background:var(-
 .closebar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:16px}
 .btn.big1{flex:1;padding:16px;font-size:16px;border-radius:12px}
 .btn{background:var(--navy);color:#fff}.btn.ghost{background:var(--soft);color:var(--acc)}
+
+.tell{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:12px;margin-bottom:12px;box-shadow:var(--sh)}
+.tell label{display:block;font-weight:800;font-size:16px;margin:0 2px 8px}.tell label small{display:block;font-weight:500;color:var(--mute);font-size:12.5px;margin-top:2px}
+.tell textarea{min-height:96px;font-size:16px;line-height:1.4}.tell .btn{width:100%;margin-top:8px}
+.sumg{display:grid;gap:8px;margin:0 0 6px}.sumg>div{display:flex;gap:10px;align-items:center;font-size:15px;min-width:0}.sumg i{font-style:normal;width:22px;text-align:center;flex:none}.sumg em{color:var(--amber);font-style:normal;font-weight:700}
+.rlist{display:flex;flex-direction:column;gap:6px;margin:10px 0}.rit{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:8px;align-items:start;background:var(--soft);border-radius:10px;padding:8px 10px;font-size:14.5px;line-height:1.4}.rit .mono{color:var(--acc);font-weight:800}.rx{border:none;background:none;color:var(--mute);font-size:22px;line-height:1;cursor:pointer;padding:0 4px;min-width:32px;min-height:32px}
+ol.todo li{cursor:pointer}ol.todo li.done{opacity:.5;text-decoration:line-through}ol.todo li.done small{text-decoration:none}
+.fbar{margin:0 0 10px}.fbar .vrow{margin-top:0}
+details.ed{margin-top:4px}details.ed>summary{font-weight:700;color:var(--acc);cursor:pointer;padding:8px 0}
 @media(min-width:900px){.fgrid{grid-template-columns:repeat(2,minmax(0,1fr))}.minis{grid-template-columns:repeat(4,minmax(0,1fr))}}
 .bgrid{display:grid;gap:10px;grid-template-columns:repeat(2,minmax(0,1fr))}.bgrid.one{grid-template-columns:minmax(0,1fr)}
 .bb{position:relative;border:1px solid var(--line);border-left:6px solid var(--c);background:var(--card);border-radius:16px;padding:14px 14px 13px;min-height:104px;text-align:left;cursor:pointer;display:flex;flex-direction:column;gap:5px;color:var(--ink);box-shadow:var(--sh);transition:transform .08s}
@@ -487,7 +496,7 @@ R.home=function(){
  const where=o=>{const f=o.f||{};return [ligneStr(f),f.arret].filter(Boolean).join(' · ')};
  view.innerHTML=`
  <div class="hhead"><div><div class="sub">${esc(date.charAt(0).toUpperCase()+date.slice(1))}</div><b style="font-size:18px">Bonjour${lget('name','')?' '+esc(lget('name','')):''}</b></div><div class="clock" id="clk">${hhmm(d)}</div></div>
- <button class="microw" onclick="_go('voice')"><span class="micbtn">${MIC}</span><span><b>Déclarer un incident à la voix</b><small>Je dis ce qui se passe, la fiche se remplit</small></span></button>
+ ${tellHtml('htell')}
  <div class="big4">
   <button class="big b1" onclick="_go('isis',{p:[]})">${I('<path d="M12 3 2 20h20z"/><path d="M12 10v4M12 17v.5"/>')}<b>Ouvrir un incident</b><span>Familles ISIS → lieu → marche à suivre, main courante, TCL</span></button>
   <button class="big b2" onclick="_go('ann')">${I('<path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a1 1 0 0 1-1 1A16 16 0 0 1 4 5a1 1 0 0 1 1-1"/>')}<b>Annuaire</b><span>Interne · externe</span></button>
@@ -506,6 +515,7 @@ R.home=function(){
  ${recent.length?`<h2>Clos récemment</h2><div class="list">${recent.map(o=>`<div class="row" onclick="_go('inc',{id:'${esc(o.id)}'})"><div class="t"><b>${esc(o.title)}</b><small>${esc(where(o)||'—')} · clos à ${esc(o.endH||'')}</small></div><span style="color:var(--mute)">›</span></div>`).join('')}</div>`:''}
  <div class="discreet"><button onclick="_go('check')">Rappel : journaux PCS ${todayInfo().join(' + ').toLowerCase()} entre 05:00 et 06:00 ›</button></div>
  <div class="foot">Aide-mémoire tiré du classeur v1.7 — la référence reste le Référentiel unique. Diffusion restreinte.</div>`;
+ bindTell('htell');window._tellPending=null;window._refait=null;
  view.querySelectorAll('[data-cont]').forEach(b=>b.onclick=()=>go('inc',{id:b.dataset.cont}));
  view.querySelectorAll('[data-stop]').forEach(b=>b.onclick=()=>closeInc(b.dataset.stop));
 };
@@ -552,7 +562,7 @@ R.isis=function(arg){
  let body='';
  if(lvl===0){
   const fb=([f,c])=>{const rs=rowsAt([f]);const mt=maxTcl(rs.map(([r])=>r));return `<button class="bb fam2" style="--c:${c}" data-f="${esc(f)}">${svgI(FICON[f])}<b>${esc(f)}</b><span>${rs.length} faits${mt?' · jusqu\'à '+mt:''}</span></button>`};
-  body=`<h1>Ouvrir un incident</h1><button class="microw" style="margin-top:10px" onclick="_go('voice')"><span class="micbtn">${MIC}</span><span><b>Déclarer à la voix</b><small>ou choisis la famille ISIS ci-dessous</small></span></button>
+  body=`<h1>${window._refait?'Changer de fait':window._tellPending?'Quel type de fait ?':'Ouvrir un incident'}</h1>${window._refait||window._tellPending?'<div class="sub">Choisis le fait : le récit et le lieu sont conservés.</div>':`<div style="margin-top:10px">${tellHtml('itell',1)}</div><div class="sub">ou choisis la famille ISIS :</div>`}
   <div id="ifam"><div class="bgrid two" style="margin-top:12px">${FAMS.slice(0,4).map(fb).join('')}</div>
   <div class="bgrid one" style="margin-top:10px">${fb(FAMS[4]).replace('class="bb fam2"','class="bb fam2 wide"')}</div>
   <div class="bgrid two" style="margin-top:10px">
@@ -571,7 +581,7 @@ R.isis=function(arg){
    body+=`<div class="sub">Choisis le fait :</div><div class="bgrid two" style="margin-top:12px">${here.map(([r,i])=>natBtn(r,i,color)).join('')}</div>`;
   }
  }
- view.innerHTML=body;bindCrumb(p);
+ view.innerHTML=body;bindCrumb(p);bindTell('itell');
  view.querySelectorAll('[data-f]').forEach(b=>b.onclick=()=>go('isis',{p:[b.dataset.f]}));
  view.querySelectorAll('[data-v]').forEach(b=>b.onclick=()=>go('isis',{p:[...p,b.dataset.v]}));
  view.querySelectorAll('[data-ri]').forEach(b=>b.onclick=()=>pickRow(+b.dataset.ri,p));
@@ -662,9 +672,9 @@ function mcCompose(o,tp){const v=(o.mc&&o.mc.v)||{};let k=0;const src=tp.t.text;
  const fin=o.mc&&o.mc.fin;if(fin)s=s.replace(/\s*$/,'')+' '+fin.replace('[HH]h[MM]',hhTxt(o.f||{})||'[HH]h[MM]');return s}
 function tclLv(c){const m=c.row&&c.row.tcl.match(/TCL\d/);return m?m[0]:null}
 function incLabel(c){const P=c.logi&&PAGES.find(d=>d.id===c.logi);return P?P.title:(c.row?c.row.n:c.title)}
-function tclCompose(o,c){const t=o.tcl||{};const f=o.f||{};const lv=t.lv||tclLv(c)||'TCL1';const x=(v,ph)=>v||ph;
- return `PCS – ${lv} – Ligne ${x(ligneStr(f),f.mode==='ut'?'—':'______')} – Lieu ${x(lieuStr(f),'____________')} – Incident ${x(t.in!=null&&t.in!==''?t.in:incLabel(c),'____________')} – Conséquences ${x(t.co,'______________')} – Mesures ${x(t.me,'______________')}`}
-function todoHtml(c,o){const L=c.logi&&LG[c.logi];const lv=tclLv(c);const f=o.f||{};const li=[];
+function tclCompose(o,c){const t=o.tcl||{};const f=o.f||{};const lv=t.lv||tclLv(c)||'TCL1';const x=(v,ph)=>v||ph;const au=tclAuto(o);const co=t.co!=null?t.co:au.co,me=t.me!=null?t.me:au.me;
+ return `PCS – ${lv} – Ligne ${x(ligneStr(f),f.mode==='ut'?'—':'______')} – Lieu ${x(lieuStr(f),'____________')} – Incident ${x(t.in!=null&&t.in!==''?t.in:incLabel(c),'____________')} – Conséquences ${x(co,'______________')} – Mesures ${x(me,'______________')}`}
+function todoHtml(c,o){const L=c.logi&&LG[c.logi];const lv=tclLv(c);const f=o.f||{};const li=[];const td=o.td||{};
  if(L)L.steps.forEach(s=>{if(s.n==='■')return;
   if(s.q)li.push(`<b>${esc(qText(s.t))}</b><div class="brs">${s.br.map(b=>`<span><i class="k ${b.k}">${b.k}</i> ${esc(cleanBr(b.t))}</span>`).join('')}</div>`);
   else li.push(`${esc(s.t)}${s.notes.length?`<small>${esc(s.notes.join(' · '))}</small>`:''}`)});
@@ -675,7 +685,7 @@ function todoHtml(c,o){const L=c.logi&&LG[c.logi];const lv=tclLv(c);const f=o.f|
  if(c.row&&c.row.j==='Oui')key.push(`<b>Journal PCS</b> : fait à reporter.`);
  const lo=f.ligne&&lineObj(f.mode,f.ligne);
  key.push(`<b>FI SAGAI</b> : qualification ${esc(c.row?c.row.n:'à choisir')}${NET.chem[f.mode]?` · cheminement ${esc(NET.chem[f.mode])}`:''}${lo&&lo.code?` · code MC ${lo.code}`:''}`);
- return `<ol class="todo">${li.map(x=>`<li>${x}</li>`).join('')}</ol>
+ return `<ol class="todo">${li.map((x,i)=>`<li data-td="${i}" class="${td[i]?'done':''}">${x}</li>`).join('')}</ol>
  <div class="keys">${key.map(x=>`<div>${x}</div>`).join('')}</div>
  ${L&&L.refl.length?`<details><summary>Réflexes (${L.refl.length})</summary><ul>${L.refl.map(t=>`<li>${esc(t)}</li>`).join('')}</ul></details>`:''}
  ${L&&L.savoir.length?`<details><summary>À savoir (${L.savoir.length})</summary><ul>${L.savoir.map(t=>`<li>${esc(t)}</li>`).join('')}</ul></details>`:''}
@@ -720,50 +730,96 @@ function tclHtml2(o,c){const t=o.tcl||{};if(!tclLv(c)&&c.row&&!t.force&&!t.lv)re
  ${c.cible==='A'&&/TCL3/.test(c.row?c.row.tcl:'')?`<div class="hint" style="margin:0 0 8px"><b>Si</b> l'agent est transporté à l'hôpital : message <b>RDL</b>, toujours doublé d'un <b>TCL3</b> (fiche 4.2).</div>`:''}
  <div class="sub">${esc(T.types)} · <b>${esc(T.val)}</b>${dl?' · '+dl:''}</div>
   <label class="l">Incident (description courte)</label><input class="f" data-t="in" value="${esc(t.in!=null?t.in:'')}" placeholder="${esc(incLabel(c))}">
- <label class="l">Conséquences</label><input class="f" data-t="co" value="${esc(t.co||'')}" placeholder="Ligne interrompue, retards, véhicule retiré…">
- <label class="l">Mesures</label><input class="f" data-t="me" value="${esc(t.me||'')}" placeholder="SP sur place, SIA missionnée, FDO avisées…">
+ <label class="l">Conséquences</label><input class="f" data-t="co" value="${esc(t.co!=null?t.co:tclAuto(o).co)}" placeholder="Ligne interrompue, retards, véhicule retiré…">
+ <label class="l">Mesures</label><input class="f" data-t="me" value="${esc(t.me!=null?t.me:tclAuto(o).me)}" placeholder="SP sur place, SIA missionnée, FDO avisées…">
  <label class="l">Message prêt à copier ${t.man?'<span class="pill">modifié à la main</span>':''}</label>
  <textarea class="f out2" id="tctxt" rows="4">${esc(t.man?t.txt:tclCompose(o,c))}</textarea>
  <div class="btns"><button class="btn" id="tccp">Copier</button>${t.man?'<button class="btn ghost" id="tcre">Régénérer</button>':''}</div>
  <details><summary>Qui prévenir avant l'envoi</summary><ol>${S.tclPrevenir.map(x=>`<li>${esc(x)}</li>`).join('')}</ol></details>`}
+let fEdit=false;
+function isoOf(d){return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())}
+function recitAll(o){return (o.recit||[]).map(e=>e.t.replace(/[.\s]+$/,'')).join('. ')}
+function anaFirst(o){const r=o.recit||[];return r.length?RC.comprendre(r[0].t,new Date(o.start||Date.now())):null}
+function anaAll(o){const r=o.recit||[];return r.length?RC.comprendre(recitAll(o),new Date(o.start||Date.now())):null}
+function tclAuto(o){const a=anaAll(o);return a?RC.tclParts(a):{co:'',me:''}}
+function mcAuto(o){const a=anaFirst(o);if(!a)return '';const s=RC.mcRecit(a,o);const L=(o.recit||[]).slice(1).map(e=>RC.suiteLine(e,o)).filter(Boolean);return L.length?s+'\n'+L.join('\n'):s}
+function factBar(o,c){const alts=[...new Set([o.sugg,...((o.voice&&o.voice.alt)||[])].filter(i=>i!=null&&i!==o.isis&&ISIS[i]))].slice(0,3);
+ const sg=o.sugg!=null&&o.sugg!==o.isis&&ISIS[o.sugg];
+ return `<div class="fbar">${alts.length?`<div class="vrow"><span>${sg?'La suite du récit évoque :':'Pas le bon fait ?'}</span>${alts.map(i=>`<button class="chip" data-valt="${i}">${esc(ISIS[i].n)}</button>`).join('')}<button class="chip" data-fchg="1">Autre…</button></div>`:`<button class="lnk" data-fchg="1">Pas le bon fait ? Changer ›</button>`}</div>`}
+function sumHtml(o,c){const f=o.f||{};const r=c.row;
+ const lieu=[ligneStr(f)||(f.mode&&f.mode!=='autre'&&f.mode!=='ut'?MODEL(f.mode):''),lieuStr(f),f.dir?'direction '+f.dir:''].filter(Boolean).join(' · ');
+ const day=f.date&&f.date!==todayIso()?' · '+dateFr(f.date):'';
+ return `<div class="sumg"><div><i>🕒</i><span><b>${esc(hhTxt(f)||'—')}</b>${esc(day)}</span></div>
+  <div><i>📍</i><span>${lieu?esc(lieu):'<em>Lieu à préciser</em>'}</span></div>
+  ${r&&needCible(r)?`<div><i>👤</i><span class="vrow" style="margin:0">${['A','V'].map(k=>`<button class="chip ${o.cible===k?'on':''}" data-vc="${k}">${CIB[k]}</button>`).join('')}</span></div>`:c.cible&&CIB[c.cible]&&c.cible!=='-'?`<div><i>👤</i><span>${esc(CIB[c.cible])}</span></div>`:''}</div>
+ <details class="ed" id="fedit" ${fEdit||!lieu?'open':''}><summary>${lieu?'Modifier le lieu ou l\'heure':'Préciser le lieu'}</summary><div id="fplace">${placeHtml(o)}</div></details>`}
+function recitHtml(o){const R=o.recit||[];
+ return `${R.length?`<div class="rlist">${R.map((e,i)=>`<div class="rit"><span class="mono">${esc((e.h||'').replace(':','h'))}</span><div>${esc(e.t)}</div><button class="rx" data-rdel="${i}" aria-label="Retirer">×</button></div>`).join('')}</div>`:''}
+ <textarea class="f vtext" id="rnew" rows="2" placeholder="${R.length?'La suite : ce qui se passe ensuite (pompiers arrivés, auteur interpellé, reprise…)':'Raconte ce qui se passe : la fiche se complète toute seule'}"></textarea>
+ <div class="btns"><button class="btn" id="radd">${R.length?'Ajouter la suite':'Compléter la fiche'}</button></div>`}
+function mcCard(o,c){const hasR=(o.recit||[]).length>0;const mode=hasR?(o.mcMode||'r'):'t';
+ const seg=hasR?`<div class="seg" style="margin:0 0 8px"><button data-mm="r" class="${mode==='r'?'on':''}">D'après le récit</button><button data-mm="t" class="${mode==='t'?'on':''}">Modèle du classeur</button></div>`:'';
+ if(mode==='t')return seg+mcHtml(o,c);
+ const man=o.mc&&o.mc.rman;
+ return seg+`<textarea class="f out2" id="mctxt" rows="7">${esc(man?o.mc.rtxt:mcAuto(o))}</textarea>
+ <div class="btns"><button class="btn" id="mccp">Copier</button>${man?'<button class="btn ghost" id="mcre">Régénérer</button>':''}</div>
+ <div class="sub">Rédigé d'après ton récit (trame des fiches 3.1–3.2). Relis et corrige avant de copier.</div>`}
 function renderFiche(o){
  const c=ctxFrom(o);const r=c.row;const closed=o.status!=='open';o.f=o.f||{};
  view.innerHTML=` <div class="fhead"><div class="sub">${r?esc(r.f1)+' › '+esc([r.f2,r.f3].filter(Boolean).join(' › ')):'Incident'}</div><h1>${esc(o.title)}</h1>
-  <div class="pills">${r?tclPill(r.tcl):''}${r&&r.j==='Oui'?'<span class="pill">JOURNAL PCS</span>':''}${c.cible&&CIB[c.cible]&&c.cible!=='-'?`<span class="pill">${esc(CIB[c.cible])}</span>`:''}${closed?`<span class="pill" style="background:var(--ok);color:#fff">CLOS ${esc(o.endH||'')}</span>`:''}</div></div>
- ${voiceBanner(o)}
+  <div class="pills">${r?tclPill(r.tcl):''}${r&&r.j==='Oui'?'<span class="pill">JOURNAL PCS</span>':''}${closed?`<span class="pill" style="background:var(--ok);color:#fff">CLOS ${esc(o.endH||'')}</span>`:''}</div></div>
+ ${factBar(o,c)}
  <div class="fgrid">
-  <section class="card fs"><h3><span>1</span>Où et quand</h3><div id="fplace">${placeHtml(o)}</div></section>
-  <section class="card fs"><h3><span>2</span>Marche à suivre</h3><div id="ftodo">${todoHtml(c,o)}</div></section>
-  <section class="card fs"><h3><span>3</span>Commentaire main courante</h3><div id="fmc">${mcHtml(o,c)}</div></section>
+  <section class="card fs"><h3><span>1</span>Ce qui se passe</h3>${sumHtml(o,c)}<div id="frecit">${recitHtml(o)}</div></section>
+  <section class="card fs"><h3><span>2</span>À faire</h3><div id="ftodo">${todoHtml(c,o)}</div></section>
+  <section class="card fs"><h3><span>3</span>Main courante</h3><div id="fmc">${mcCard(o,c)}</div></section>
   <section class="card fs"><h3><span>4</span>Message TCL</h3><div id="ftcl">${tclHtml2(o,c)}</div></section>
  </div>
  <div class="closebar">${closed?`<div class="sub">Incident clos à <b>${esc(o.endH||'')}</b>.</div><button class="btn ghost" id="freopen">Rouvrir</button>`:`<button class="btn red big1" id="fclose">Clore l'incident</button>`}
   <button class="btn ghost" id="fdel">Supprimer</button></div>
  <datalist id="dl-stops">${ALLSTOPS.map(s=>`<option value="${esc(s)}">`).join('')}</datalist>`;
- bindFiche(o.id,c);bindVoiceBanner(o.id);
+ bindFiche(o.id,c);
 }
 function bindFiche(id,c){
  let Z=getInc(id);let sv=null;
  const save=(z,now)=>{clearTimeout(sv);sv=null;if(now)saveInc(z);else sv=setTimeout(()=>{sv=null;saveInc(z)},250)};
  const flush=()=>{clearTimeout(sv);sv=null;saveInc(Z)};window._flushFiche=()=>{if(sv){clearTimeout(sv);sv=null;saveInc(Z)}};
- const upOut=()=>{const z=Z;const mt=$('#mctxt');if(mt&&!(z.mc&&z.mc.man)){const L=mcList(c);const cur=curTpl(L,z,c);mt.value=mcCompose(z,cur)}
+ const upOut=()=>{const z=Z;const mt=$('#mctxt');const mode=(z.recit||[]).length?(z.mcMode||'r'):'t';
+  if(mt&&mode==='r'&&!(z.mc&&z.mc.rman))mt.value=mcAuto(z);
+  if(mt&&mode==='t'&&!(z.mc&&z.mc.man)){const L=mcList(c);const cur=curTpl(L,z,c);mt.value=mcCompose(z,cur)}
   const tt=$('#tctxt');if(tt&&!(z.tcl&&z.tcl.man))tt.value=tclCompose(z,c)};
  const rer=()=>{flush();renderFiche(getInc(id))};
+ const fe=$('#fedit');if(fe)fe.addEventListener('toggle',()=>{fEdit=fe.open});
  // où / quand
  view.querySelectorAll('#fplace [data-k]').forEach(e=>{const ev=e.tagName==='SELECT'?'change':'input';e.addEventListener(ev,()=>{Z.f[e.dataset.k]=e.value;
   if(e.dataset.k==='ligne'&&e.tagName==='SELECT'){Z.f.arret=''}
   if(e.dataset.k==='ligne'&&e.tagName==='INPUT'){Z.f.ligne=e.value.toUpperCase().replace(/\s/g,'')}
-  if(e.tagName==='SELECT'||e.dataset.k==='date'){rer();return}
+  if(e.tagName==='SELECT'||e.dataset.k==='date'){fEdit=true;rer();return}
   save(Z);upOut();if(e.dataset.k==='heure'){$('#ftcl').innerHTML=tclHtml2(Z,c);bindTcl2()}})});
- view.querySelectorAll('[data-mode]').forEach(b=>b.onclick=()=>{if(Z.f.mode===b.dataset.mode)return;Z.f.mode=b.dataset.mode;Z.f.ligne='';Z.f.arret='';rer()});
+ view.querySelectorAll('[data-mode]').forEach(b=>b.onclick=()=>{if(Z.f.mode===b.dataset.mode)return;Z.f.mode=b.dataset.mode;Z.f.ligne='';Z.f.arret='';fEdit=true;rer()});
+ // fait / victime
+ view.querySelectorAll('[data-vc]').forEach(b=>b.onclick=()=>{flush();const z=getInc(id);z.cible=b.dataset.vc;const cc=ctxFrom(z);z.logi=cc.logi;z.mc=Object.assign({},z.mc,{k:undefined,v:{},man:false});saveInc(z);renderFiche(getInc(id))});
+ view.querySelectorAll('[data-valt]').forEach(b=>b.onclick=()=>{flush();const z=getInc(id);setFait(z,+b.dataset.valt,null);saveInc(z);renderFiche(getInc(id));toast('Fait modifié')});
+ view.querySelectorAll('[data-fchg]').forEach(b=>b.onclick=()=>{flush();window._refait=id;go('isis',{p:[]})});
+ // récit
+ const ra=$('#radd');if(ra)ra.onclick=()=>{const t=($('#rnew').value||'').trim();if(t.length<3){toast('Écris ou dicte d\'abord la suite');$('#rnew').focus();return}
+  flush();const z=getInc(id);addRecit(z,t);saveInc(z);window._flushFiche=null;renderFiche(getInc(id));toast((z.recit.length>1?'Suite ajoutée':'Fiche complétée')+' : relis les messages')};
+ view.querySelectorAll('[data-rdel]').forEach(b=>b.onclick=()=>{flush();const z=getInc(id);const prev=JSON.parse(JSON.stringify(z));z.recit.splice(+b.dataset.rdel,1);saveInc(z);renderFiche(getInc(id));snack('Passage retiré','Annuler',()=>{saveInc(prev);if(cur==='inc')renderFiche(getInc(id))})});
+ // à faire
+ view.querySelectorAll('[data-td]').forEach(li=>li.onclick=()=>{Z.td=Z.td||{};const k=li.dataset.td;if(Z.td[k])delete Z.td[k];else Z.td[k]=1;li.classList.toggle('done',!!Z.td[k]);save(Z,1)});
  // MC
  const bindMc=()=>{
-  view.querySelectorAll('[data-tpl]').forEach(b=>b.onclick=()=>{Z.mc={k:b.dataset.tpl,v:{},fin:'',man:false};flush();$('#fmc').innerHTML=mcHtml(Z,c);bindMc()});
+  view.querySelectorAll('[data-mm]').forEach(b=>b.onclick=()=>{Z.mcMode=b.dataset.mm;flush();$('#fmc').innerHTML=mcCard(Z,c);bindMc()});
+  const mode=(Z.recit||[]).length?(Z.mcMode||'r'):'t';
+  if(mode==='r'){const mt=$('#mctxt');mt.oninput=()=>{Z.mc=Z.mc||{};Z.mc.rman=true;Z.mc.rtxt=mt.value;save(Z)};
+   $('#mccp').onclick=()=>copy($('#mctxt').value);
+   const re=$('#mcre');if(re)re.onclick=()=>{Z.mc.rman=false;delete Z.mc.rtxt;flush();$('#fmc').innerHTML=mcCard(Z,c);bindMc()};return}
+  view.querySelectorAll('[data-tpl]').forEach(b=>b.onclick=()=>{Z.mc=Object.assign({},Z.mc,{k:b.dataset.tpl,v:{},fin:'',man:false});flush();$('#fmc').innerHTML=mcCard(Z,c);bindMc()});
   view.querySelectorAll('[data-fv]').forEach(e=>e.addEventListener(e.tagName==='SELECT'?'change':'input',()=>{Z.mc=Z.mc||{v:{}};Z.mc.v=Z.mc.v||{};if(!Z.mc.k)Z.mc.k=mcList(c)[0].k;Z.mc.v[e.dataset.fv]=e.value;save(Z);upOut()}));
   const fn=$('[data-fin]');if(fn)fn.onchange=()=>{Z.mc=Z.mc||{v:{}};if(!Z.mc.k)Z.mc.k=mcList(c)[0].k;Z.mc.fin=fn.value;save(Z,1);upOut()};
   const mt=$('#mctxt');mt.oninput=()=>{Z.mc=Z.mc||{v:{}};if(!Z.mc.k)Z.mc.k=mcList(c)[0].k;Z.mc.man=true;Z.mc.txt=mt.value;save(Z)};
   $('#mccp').onclick=()=>copy($('#mctxt').value);
-  const re=$('#mcre');if(re)re.onclick=()=>{Z.mc.man=false;delete Z.mc.txt;flush();$('#fmc').innerHTML=mcHtml(Z,c);bindMc()};
+  const re=$('#mcre');if(re)re.onclick=()=>{Z.mc.man=false;delete Z.mc.txt;flush();$('#fmc').innerHTML=mcCard(Z,c);bindMc()};
  };bindMc();
  // TCL
  function bindTcl2(){
@@ -779,8 +835,24 @@ function bindFiche(id,c){
  const ro=$('#freopen');if(ro)ro.onclick=()=>{Z.status='open';delete Z.end;delete Z.endH;flush();renderFiche(getInc(id))};
  const dl=$('#fdel');dl.onclick=()=>{clearTimeout(sv);sv=null;window._flushFiche=null;const prev=getInc(id);store.set('inc',incs().filter(x=>x.id!==id));go('home');snack('Incident supprimé','Annuler',()=>{saveInc(prev);if(cur==='home')R.home()})};
 }
-function newInc(base){const n=new Date();const o=Object.assign({id:n.getTime().toString(36)+Math.random().toString(36).slice(2,6),start:n.toISOString(),h:hhmm(n),status:'open',f:{date:todayIso(),heure:hhmm(n)},mc:{},tcl:{}},base);saveInc(o);go('inc',{id:o.id});return o}
-function openCase(x){const c=ctxFrom(x);const b={isis:x.r,cible:x.cible,logi:c.logi,title:c.title};const vp=window._voicePending;if(vp){window._voicePending=null;b.f={date:todayIso(),heure:vp.f.heure||hhmm(new Date()),mode:vp.f.mode||'',ligne:vp.f.ligne||'',arret:vp.f.arret||'',prec:vp.f.prec||''};b.tcl={co:vp.co,me:vp.me};b.voice={text:vp.text,alt:[],src:'local'}}newInc(b)}
+function setFait(z,ni,cb){const old=z.isis;z.isis=ni;const row=ISIS[ni];
+ if(cb)z.cible=cb;if(!(row.m&&row.m[z.cible]))z.cible=row.c==='A'?'A':row.c==='V'?'V':row.c==='-'?'-':(z.cible==='A'||z.cible==='V'?z.cible:'A/V');
+ const c=ctxFrom(z);z.logi=c.logi;z.title=c.title;z.mc=Object.assign({},z.mc,{k:undefined,v:{},fin:'',man:false});z.tcl=Object.assign({},z.tcl,{lv:undefined,man:false,force:false});z.td={};
+ z.voice=z.voice||{alt:[]};z.voice.alt=[old,...(z.voice.alt||[]).filter(i=>i!==ni)].filter(i=>i!=null).slice(0,3);if(z.sugg===ni)delete z.sugg;z.isisAuto=false}
+function addRecit(z,t){const now=new Date();z.recit=z.recit||[];const first=!z.recit.length;
+ const a1=RC.comprendre(t,now);const h=a1.f.heure||hhmm(now);z.recit.push({h,t});
+ const a=anaAll(z);const f=z.f=z.f||{};
+ if(first&&a1.f.heure&&!a1.hAuto){f.heure=a1.f.heure;if(a1.f.dayBack)f.date=isoOf(new Date(now.getTime()-864e5))}
+ if(!f.mode&&a.f.mode){f.mode=a.f.mode;f.ligne=a.f.ligne||'';f.arret=a.f.arret||''}
+ else if(f.mode===a.f.mode&&!f.ligne&&a.f.ligne){f.ligne=a.f.ligne;if(!f.arret)f.arret=a.f.arret||''}
+ else if(f.mode===a.f.mode&&!f.arret&&a.f.arret)f.arret=a.f.arret;
+ if(!f.prec&&a.f.prec)f.prec=a.f.prec;if(!f.dir&&a.f.dir)f.dir=a.f.dir;
+ if(a.id!=null&&a.id!==z.isis){if(z.isis==null||first&&!z.isisManual){}z.sugg=a.id}else delete z.sugg;
+ if(a.cible&&(z.cible==='A/V'||!z.cible)&&ISIS[z.isis]&&ISIS[z.isis].m&&ISIS[z.isis].m[a.cible]){z.cible=a.cible;const c=ctxFrom(z);z.logi=c.logi}}
+function newInc(base){const tp=window._tellPending;if(tp&&!base.recit){window._tellPending=null;const f=tp.a.f;base.recit=[{h:f.heure||hhmm(new Date()),t:tp.text}];base.f={date:f.dayBack?isoOf(new Date(Date.now()-864e5)):todayIso(),heure:f.heure||hhmm(new Date()),mode:f.mode||'',ligne:f.ligne||'',arret:f.arret||'',prec:f.prec||'',dir:f.dir||''};base.voice={alt:[]}}
+ const n=new Date();const o=Object.assign({id:n.getTime().toString(36)+Math.random().toString(36).slice(2,6),start:n.toISOString(),h:hhmm(n),status:'open',f:{date:todayIso(),heure:hhmm(n)},mc:{},tcl:{}},base);saveInc(o);go('inc',{id:o.id},tp&&o.recit?{reset:1}:{});return o}
+function openCase(x){const rf=window._refait;if(rf){window._refait=null;const z=getInc(rf);if(z){setFait(z,x.r,x.cible);saveInc(z);let k=-1;navStack.forEach((e,i)=>{if(e.t==='inc'&&e.a&&e.a.id===rf)k=i});navStack=k>=0?navStack.slice(0,k):[];go('inc',{id:rf},{noPush:1});toast('Fait modifié');return}}
+ const c=ctxFrom(x);const b={isis:x.r,cible:x.cible,logi:c.logi,title:c.title,isisManual:true};newInc(b)}
 R.act=function(arg){openCase(arg)};
 let wz={id:null};
 R.inc=function(arg){
@@ -789,202 +861,424 @@ R.inc=function(arg){
  if(arg&&arg.id)wz={id:arg.id};
  const o=wz.id?getInc(wz.id):null;if(!o)return go('home');
  renderFiche(o)};
-// ================= DÉCLARATION VOCALE
+// ================= RÉCIT LIBRE (dictée du clavier) → FICHE
 const MIC='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>';
-let DICT=null,SAMPLE=null;
-// aucune capacité externe : dictée du système et analyse locale uniquement
-function micUi(on){const b=$('#vmic');if(!b)return;b.classList.toggle('on',!!on);const s=$('#vstate');if(s)s.textContent=on?'J\'écoute… touche pour arrêter':'Touche le micro et parle'}
-let SR=null,srOn=false;
-function micToggle(){const t=$('#vtext');if(!t)return;
- const ua=navigator.userAgent;const ios=/iPhone|iPad|iPod/.test(ua)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);const and=/Android/.test(ua);const win=/Win/.test(navigator.platform);const mac=/Mac/.test(navigator.platform)&&!ios;
- t.focus();try{const n=t.value.length;t.setSelectionRange(n,n)}catch(e){}
- const msg=ios?'Le clavier est ouvert : touche le micro 🎙 en bas à droite du clavier, parle, puis touche à nouveau le micro pour arrêter.<small>Pas de micro sur le clavier ? Réglages de l\'iPhone › Général › Clavier › Activer Dictée.</small>':and?'Touche le micro 🎙 du clavier et parle.':win?'Sur Windows : appuie sur <b>touche Windows + H</b> et parle.':mac?'Sur Mac : appuie deux fois sur la touche <b>Fn</b> (ou 🌐) et parle.':'Utilise la dictée de ton clavier.';
- const h=$('#vhint');h.className='hint vinfo';h.innerHTML=msg;h.style.display='';
- const b=$('#vmic');b.classList.add('on');clearTimeout(b._t);b._t=setTimeout(()=>b.classList.remove('on'),3000);
- t.scrollIntoView({block:'center',behavior:'smooth'})}
-function voiceHint(m){const e=$('#vhint');if(e){e.textContent=m;e.style.display=''}}
-R.voice=function(){
- view.innerHTML=`<h1>Déclarer un incident</h1><div class="sub">Dis ce qui se passe : qui, quoi, où (ligne, arrêt), quand. La fiche se remplit toute seule, tu vérifies.</div>
- <div class="vbox"><button class="vmic" id="vmic" aria-label="Parler">${MIC}</button><div class="vstate" id="vstate">Touche le micro puis dicte avec le clavier</div></div>
- <div class="hint warn" id="vhint" style="display:none"></div>
- <textarea class="f vtext" id="vtext" rows="4" placeholder="Ex. : un conducteur vient de se faire agresser physiquement par un voyageur sur la ligne C25, à l'arrêt Gare de Vénissieux, il y a 5 minutes."></textarea>
- <div class="vpart" id="vpart"></div>
- <div class="btns"><button class="btn big1" id="vgo">Créer la fiche</button><button class="btn ghost" id="vclr">Effacer</button></div>
- <div id="vres"></div>
- <div class="sub" style="margin-top:14px">Analyse faite sur l'appareil, rien n'est envoyé. Vérifie toujours le fait proposé.</div>`;
- $('#vmic').onclick=micToggle;
- $('#vclr').onclick=()=>{$('#vtext').value='';$('#vres').innerHTML='';$('#vtext').focus()};
- $('#vgo').onclick=()=>voiceGo();
-};
-// ---------- analyse locale (secours)
-const VKW=[
- [/(?<![a-zà-ÿ])viol(?![a-zà-ÿ])|viol[ée]e?(?![a-zà-ÿ])/,/Viols ou tentatives de viol sur voyageurs/],
- [/attouch|frott|touch[a-zéèê]* (les |aux |ses )?fesses|main aux fesses|tripot|pelot/,/Frotteurs/],
- [/exhib|harc[eè]l|outrage sexiste|film\w* sous la jupe|upskirt/,/Exhibitionnistes/],
- [/suicide|s'est jet[ée]|se jeter|accident de personne|personne sous (la|le) (rame|m[ée]tro|tram)/,/Suicide/],
- [/d[ée]c[èe]s|d[ée]c[ée]d|(?<![a-zà-ÿ])mort(?<![a-zà-ÿ])(?! de)/,/Décès/],
- [/incendie|(?<![a-zà-ÿ])feu(?![a-zà-ÿ])|fum[ée]e|flammes?|br[ûu]l[ée]/,/Incendies ou départ de feu volontaires/],
- [/(?<![a-zà-ÿ])armes?(?![a-zà-ÿ])|couteau|pistolet|cutter|(?<![a-zà-ÿ])flingue|machette|tournevis/,/avec armes/],
- [/colis|bagage|sac abandonn|valise abandonn|objet abandonn/,/colis suspects/],
- [/bombe|attentat/,/faux attentats/],
- [/laser/,/laser/],
- [/caillou|caillass|pierres?(?![a-zà-ÿ])|projectiles?|(?<![a-zà-ÿ])jets? de|mortier|vitre (cass|bris|[ée]toil)|pare-brise/,/Jets de projectile avec bris/],
- [/accident|collision|percut|accroch|heurt|carambol|(?<![a-zà-ÿ])choc(?![a-zà-ÿ])/,'ACC'],
- [/crach|lacrymo|(?<![a-zà-ÿ])gaz(?![a-zà-ÿ])|bomb\w* au poivre|aspers/,/contact indirect/],
- [/menac\w* de mort/,/menaces de mort/],
- [/racis|sexis|religi|antis[ée]mit|homophob/,/racistes/],
- [/rixe|bagarre|baston|[ée]chauffour|r[èe]glement de comptes?/,/Rixes/],
- [/agress|frapp|(?<![a-zà-ÿ])coups?(?![a-zà-ÿ])|tabass|violen|mordu|morsure|gifl|(?<![a-zà-ÿ])poings?(?![a-zà-ÿ])|tap[ée]|cogn|bless[ée] par|pouss[ée]/,/contact direct/],
- [/arrach|(?<![a-zà-ÿ])vol[ée]?s?(?![a-zà-ÿ])|(?<![a-zà-ÿ])vol |d[ée]rob|pickpocket|tire-laine|piqu[ée] (son|le|la|sa)/,'VOL'],
- [/(?<![a-zà-ÿ])tags?(?![a-zà-ÿ])|tagu|graff/,'TAG'],
- [/d[ée]grad|vandal|cass[ée]|bris[ée]|d[ée]fonc|arrach[ée] (le|la)/,'DEG'],
- [/malaise|inconscient|[ée]vanoui|perdu connaissance|au sol|ne r[ée]pond plus|convuls|bouge plus/,'MAL'],
- [/chute|tomb[ée]|bless/,'MAL'],
- [/chien|animal|animaux|(?<![a-zà-ÿ])chat(?![a-zà-ÿ])|serpent|cheval/,/animaux/],
- [/tunnel|sur les voies|descen\w* sur (la|les) voie|pi[ée]ton sur (la|les) voie/,/Descentes/],
- [/intrusion|intrus|escalad/,/intrusions sans dégradation/],
- [/stup|drogue|(?<![a-zà-ÿ])deal|cannabis|(?<![a-zà-ÿ])shit(?![a-zà-ÿ])|joint|crack|seringue/,/stupéfiants/],
- [/(?<![a-zà-ÿ])ipm(?![a-zà-ÿ])|ivre|alcool|ivresse|bourr[ée]|alcoolis/,/Ivresse/],
- [/mendi/,/Mendicité/],
- [/squat|(?<![a-zà-ÿ])sdf(?![a-zà-ÿ])|dort (dans|sur)|campement/,/Squats/],
- [/surf|accroch\w* (à|a) l'arri|tramsurf/,/tramsurfing/],
- [/stationn|voiture g[êe]nante|v[ée]hicule g[êe]nant|gar[ée] sur|rod[ée]o/,/Circulations ou stationnements/],
- [/fum\w* (une )?(cigarette|clope)|(?<![a-zà-ÿ])fume(?![a-zà-ÿ])|cigarette|clope|musique|vocif|crie/,/Fumeurs/],
- [/trottinette|v[ée]lo|skate|gyropode|hoverboard/,/transports personnel/],
- [/alarme|rupteur|arr[êe]t d'urgence|poign[ée]e/,/Manipulations/],
- [/perdu(?![a-zà-ÿ])|perdue|[ée]gar[ée]|d[ée]sorient|enfant seul|fugue|alzheimer/,/Assistance à des tiers/],
- [/m[ée]dia|journaliste|presse|cam[ée]ra (de )?t[ée]l[ée]/,/impact médiatique/],
- [/insult|injur|outrage|menac|(?<![a-zà-ÿ])traite(?![a-zà-ÿ])|(?<![a-zà-ÿ])noms? d'oiseau/,null],
- [/interromp|interruption|d[ée]vi[ée]|ligne coup[ée]e|ligne arr[êe]t[ée]e|panne|bloqu[ée]e?/,/Lignes arrêtées/]];
-const AGT=/chauffeur|conducteur|conductrice|agent|contr[ôo]leu|(?<![a-zà-ÿ])cr(?![a-zà-ÿ])|(?<![a-zà-ÿ])al(?![a-zà-ÿ])|(?<![a-zà-ÿ])ads(?![a-zà-ÿ])|(?<![a-zà-ÿ])sia(?![a-zà-ÿ])|(?<![a-zà-ÿ])dci(?![a-zà-ÿ])|machiniste|r[ée]gulateur|(?<![a-zà-ÿ])ams?(?![a-zà-ÿ])/;
-const VOY=/voyageu|usager|passag|client|jeune|femme|homme|personne|dame|monsieur|enfant|ado|individu/;
-function stripPlaces(t){let x=' '+t.toLowerCase()+' ';ALLSTOPS.slice().sort((a,b)=>b.length-a.length).forEach(s=>{const n=s.toLowerCase();if(n.length>3)x=x.split(n).join(' # ')});return x}
-function localAnalyse(text){const full=text.toLowerCase();const t=stripPlaces(text);const out=[];
- const victimA=/(chauffeur|conducteur|conductrice|agent|contr[ôo]leu|\bcr\b|\bal\b|machiniste)\w*\s+(s'est fait|a [ée]t[ée]|vient de se faire|se fait|agress|frapp|insult|menac|bless|mordu|cognÉ|cogn)|(agress|frapp|insult|menac|crach|bless|mord)\w*\s+(un |une |le |la |l'|notre )?(chauffeur|conducteur|conductrice|agent|contr[ôo]leu|machiniste|\bcr\b|\bal\b)/.test(full);
- const agent=victimA||(AGT.test(full)&&!VOY.test(full));
- const pick=re=>ISIS.findIndex(r=>re.test(r.n));const sp=/sdmis|pompier|\bsp\b|samu|secours|ambulance/.test(full);
- for(const [k,re] of VKW){if(!k.test(t))continue;let i=-1;
-  if(re===null)i=agent?pick(/Menaces et outrages sur agents/):pick(/Menaces de violences ou injures/);
-  else if(re==='ACC')i=pick(sp||/bless/.test(t)?/Accidents de véhicules TCL avec intervention/:(/tiers|deux voitures|entre deux/.test(t)?/Accidents de tiers/:/Accidents de véhicules TCL avec blessés légers/));
-  else if(re==='MAL')i=pick(sp?/Malaise.*avec intervention/:/Malaise.*sans intervention/);
-  else if(re==='VOL')i=pick(/agress|arrach|violen|menac|frapp/.test(t)?(agent?/Vol avec violence ou menaces sur agents/:/Vol avec violence ou menaces sur voyageurs/):(agent?/Vols simple sur agents/:/Vols simple sur voyageurs/));
-  else if(re==='TAG')i=pick(/rame|bus\b|v[ée]hicule|wagon|voiture/.test(t)?/^Tags sur MR$/:/^Tags sur infrastructures$/);
-  else if(re==='DEG')i=pick(/rame|\bbus\b|v[ée]hicule|wagon|voiture/.test(t)?/Dégradations volontaires \/ vandalisme sur MR/:/Dégradations volontaires \/ vandalisme sur infrastructures/);
-  else i=pick(re);
-  if(i>=0&&!out.includes(i))out.push(i)}
- let cible=agent?'A':(VOY.test(full)?'V':null);if(out[0]!=null&&/Assistance à des tiers/.test(ISIS[out[0]].n))cible='A';
- return {id:out[0]!=null?out[0]:null,alt:out.slice(1,3),cible,...localPlace(text),consequences:'',mesures:'',src:'local'}}
-const NUMW={un:1,une:1,deux:2,trois:3,quatre:4,cinq:5,six:6,sept:7,huit:8,neuf:9,dix:10};
-function localPlace(text){const f={mode:null,ligne:null,arret:null,prec:null,heure:null,dayBack:false};let t=text.replace(/\b(t|T)\s+(deux|trois|quatre|cinq|six|sept|neuf|dix|un)\b/g,(m,a,b)=>'T'+NUMW[b]);let m;
- if((m=t.match(/m[ée]tro\s*([abcd])\b|ligne\s+([abcd])\b/i))){f.mode='metro';f.ligne=(m[1]||m[2]).toUpperCase()}
- else if((m=t.match(/\b[tT]\s?(10|[1-79])\b/))){f.mode='tram';f.ligne='T'+m[1]}
- else if(/rh[oô]nexpress|\bRX\b/i.test(t)){f.mode='tram';f.ligne='RX'}
- else if((m=t.match(/\b[fF]\s?([12])\b/))||/funiculaire|ficelle/i.test(t)){f.mode='funi';f.ligne=m?'F'+m[1]:null}
- else if(/navig[oô]ne|navette fluviale/i.test(t)){f.mode='navi';f.ligne='NAV1'}
- else if((m=t.match(/(?:ligne|bus|le|du|la)\s*((?:tb|br|brf|c|j|jd|pl|zi|gm|s)\s?\d{1,3}e?|\d{1,3}e?)\b/i))&&(!/^\d{1,2}$/.test(m[1])||/chauffeur|conducteur|machiniste|\bbus\b/i.test(t))||((m=t.match(/(?:ligne|bus)\s*(\d{1,3}e?)\b/i)))){f.mode='bus';f.ligne=m[1].toUpperCase().replace(/\s/g,'')}
- else if(/\bbus\b|chauffeur|machiniste|trolley/i.test(t))f.mode='bus';
- const n=norm(t.replace(/\b(vers|à|a)\s+\d{1,2}\s?[h:]\s?\d{0,2}/gi,' '));const lo=f.ligne&&lineObj(f.mode,f.ligne);
- const pool=lo&&lo.stops?lo.stops:ALLSTOPS;let best=null;
- pool.forEach(s=>{if(n.includes(norm(s))&&(!best||s.length>best.length))best=s});
- if(!best){const part=[];pool.forEach(s=>{const w=norm(s).split(/\s+/).filter(x=>x.length>3);if(w.length&&w.every(x=>n.includes(x)))part.push(s)});if(part.length===1)best=part[0]}
- if(best){if(f.mode){f.arret=best}else{const L=[].concat(...['tram','metro','funi','navi'].map(md=>NET.lines[md].filter(l=>l.stops.includes(best)).map(l=>[md,l])));if(L.length===1){f.mode=L[0][0];f.ligne=L[0][1].id;f.arret=best}else{f.mode='autre';f.prec=best}}}
- if(!f.arret&&!f.prec&&(m=t.match(/(?:à l'arr[êe]t|arr[êe]t|station|à hauteur d[eu]|au niveau d[eu]|devant)\s+([^,.;]{3,60})/i))){let a=m[1].replace(/\s+(vers|à|a)\s+\d{1,2}\s?[h:].*$/i,'').replace(/\s+il y a .*$/i,'').trim();if(a)f.arret=a}
- const now=new Date();
- if((m=t.match(/il y a\s+(\d{1,3}|une?|deux|trois|quatre|cinq|dix)\s*(min|minutes?|h|heures?)\b/i))){const q=isNaN(+m[1])?NUMW[m[1].toLowerCase()]||1:+m[1];const d=new Date(now.getTime()-q*(/^h/i.test(m[2])?3600000:60000));f.heure=pad(d.getHours())+':'+pad(d.getMinutes());if(d.toDateString()!==now.toDateString())f.dayBack=true}
- else if((m=t.match(/\b([01]?\d|2[0-3])\s?(?:h|:)\s?([0-5]\d)?\b/))){f.heure=pad(+m[1])+':'+(m[2]||'00');const [hh,mm]=f.heure.split(':').map(Number);if(hh*60+mm>now.getHours()*60+now.getMinutes()+30)f.dayBack=true}
- else if(/minuit et quart/i.test(t)){f.heure='00:15'}else if(/minuit/i.test(t)){f.heure='00:00'}
- return f}
-// ---------- analyse Claude
-function netTxt(){const L=NET.lines;return `bus (lignes) : ${L.bus.map(l=>l.id).join(', ')}
-tram : ${L.tram.map(l=>l.id+' = '+l.stops.join(' ; ')).join('\n')}
-metro : ${L.metro.map(l=>l.id+' = '+l.stops.join(' ; ')).join('\n')}
-funi : ${L.funi.map(l=>l.id+' = '+l.stops.join(' ; ')).join('\n')}
-navi : ${L.navi.map(l=>l.id+' = '+l.stops.join(' ; ')).join('\n')}
-ut : ${L.ut.map(l=>l.id+' ('+l.t+')').join(', ')}`}
-async function aiAnalyse(text){if(!SAMPLE)return null;
- const facts=ISIS.map((r,i)=>`${i} | ${r.f1} | ${[r.f2,r.f3].filter(Boolean).join(' > ')} | ${r.n} | cible ${r.c||'-'}`).join('\n');
- const p=`Tu aides le superviseur du PC Sécurité des TCL (réseau de Lyon) à ouvrir une fiche incident à partir d'une déclaration dictée (la dictée peut contenir des fautes de reconnaissance vocale : « c 25 » = C25, « t3 » = T3…).
-Heure actuelle : ${hhmm(new Date())}.
-DÉCLARATION : """${text.replace(/"""/g,'')}"""
+// ================= COMPRÉHENSION DU RÉCIT (100 % sur l'appareil)
+// Dépend de : ISIS, NET, ALLSTOPS, norm, lineObj, pad, hhmm
+const RC=(()=>{
+const B='(?<![a-zà-ÿ0-9])',E='(?![a-zà-ÿ0-9])';
+const W=s=>new RegExp(B+'(?:'+s+')'+E,'i');
+const NUMW={un:1,une:1,deux:2,trois:3,quatre:4,cinq:5,six:6,sept:7,huit:8,neuf:9,dix:10,onze:11,douze:12,quinze:15,vingt:20,trente:30,quarante:40,'quarante-cinq':45,cinquante:50};
+const ACC={a:'[aàâä]',e:'[eéèêë]',i:'[iîï]',o:'[oôö]',u:'[uùûü]',c:'[cç]'};
+function fuzzyRe(name){return new RegExp(B+name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[.*+?^${}()|[\]\\]/g,'\\$&').split('').map(ch=>ACC[ch]||(/[\s\-']/.test(ch)?"[\\s\\-'’]*":ch)).join('')+E,'i')}
 
-Consignes :
-1. id = numéro du fait de la LISTE DES FAITS qui correspond le mieux ; alt = jusqu'à 2 autres numéros plausibles.
-2. cible = "A" si la victime est un agent du réseau (conducteur, chauffeur, CR, AL, contrôleur, agent SIA/DCI/ADS…), "V" si c'est un voyageur ou un tiers, null si inconnu. L'auteur n'est pas la cible.
-3. mode parmi bus, tram, metro, funi, navi, ut, autre. ligne = identifiant exact de la liste RÉSEAU. arret = nom EXACT d'un arrêt de cette ligne dans la liste ; pour le bus, le nom tel qu'il est dit. prec = précision de lieu (quai, direction, à bord du véhicule…).
-4. heure = "HH:MM" seulement si l'heure est dite ou se déduit (« il y a 5 minutes »), sinon null.
-5. consequences et mesures : très courts, uniquement ce que dit la déclaration, sinon "".
-N'invente rien : null ou "" si l'information n'est pas dans la déclaration.
+// ---------- 1. nettoyage de la dictée
+function prep(raw){let t=' '+String(raw||'').replace(/[’ʼ]/g,"'").replace(/\s+/g,' ')+' ';
+ t=t.replace(/(?<![a-zà-ÿ])(euh+|heu+|bah|ben|hum)(?![a-zà-ÿ])[,]?/gi,' ');
+ t=t.replace(/(?<![a-zà-ÿ])(d|l|j|n|s|c|qu) (?=[aeiouyhéèêàâîôû])/gi,"$1'");
+ const AB={voy:'voyageur',voys:'voyageurs',ds:'dans',pdt:'pendant',tjrs:'toujours',tjs:'toujours',qq:'quelqu\'un',qqn:'quelqu\'un',bcp:'beaucoup',mvt:'mouvement',stp:'',svp:'',ss:'sous',av:'avenue',agt:'agent',agts:'agents',ctrl:'contrôle',ctrlr:'contrôleur',interp:'interpellé',vict:'victime',dmd:'demande',dde:'demande'};
+ t=t.replace(/(?<![a-zà-ÿ])(voys?|ds|pdt|tjrs|tjs|qqn?|bcp|mvt|agts?|ctrlr?|interp|vict|dmd|dde)(?![a-zà-ÿ])/gi,m=>AB[m.toLowerCase()]);
+ // lignes dictées : « c 25 », « t trois », « tram 3 », « ligne t 3 », « f un »
+ t=t.replace(new RegExp(B+'(t|tram|tramway)\\s+(un|deux|trois|quatre|cinq|six|sept|neuf|dix)'+E,'gi'),(m,a,b)=>' T'+NUMW[b.toLowerCase()]);
+ t=t.replace(new RegExp(B+'(?:tram(?:way)?\\s+|ligne\\s+)?t\\s?(10|[1-79])'+E,'gi'),' T$1');
+ t=t.replace(new RegExp(B+'tram(?:way)?\\s+(10|[1-79])'+E,'gi'),' T$1');
+ t=t.replace(new RegExp(B+'(c|tb|pl|zi|jd|gm|br|brf)\\s(\\d{1,3})'+E,'gi'),(m,a,b)=>' '+a.toUpperCase()+b);
+ t=t.replace(new RegExp(B+'(c|tb|pl|zi|jd|gm|br|brf)(\\d{1,3})'+E,'gi'),(m,a,b)=>a.toUpperCase()+b);
+ t=t.replace(new RegExp(B+'f\\s?(un|1|deux|2)'+E,'gi'),(m,a)=>'F'+(/un|1/i.test(a)?1:2));
+ t=t.replace(new RegExp(B+'rh[oô]ne?\\s?e?xpress'+E,'gi'),'RX');
+ t=t.replace(/(m[ée]tro|ligne)\s+([abcd])(?![a-zà-ÿ0-9'])/gi,(m,a,b)=>a+' '+b.toUpperCase());
+ // heures : « 10 h 15 », « 10:15 », « 10 heures 15 », « 6h »
+ t=t.replace(new RegExp(B+'([01]?\\d|2[0-3])\\s?(?:h|heures?|:)\\s?([0-5]\\d)'+E,'gi'),(m,h,mm)=>pad(+h)+'h'+mm);
+ t=t.replace(new RegExp(B+'([01]?\\d|2[0-3])\\s?(?:h|heures?)'+E+'(?!\\s?\\d)','gi'),(m,h)=>pad(+h)+'h00');
+ t=t.replace(/\s+/g,' ').replace(/\s+([,.;!?])/g,'$1');
+ return t.trim()}
 
-LISTE DES FAITS (numéro | famille | catégorie | fait | cibles possibles) :
-${facts}
+// ---------- 2. découpage en propositions
+function clauses(t){const out=[];
+ t=t.replace(/\s+:\s+/g,'. ');
+ if(!/[,.;]/.test(t.slice(0,-1))&&t.length>60)t=t.replace(/\s+(?=(?:vers\s+|à\s+|a\s+)?(?:l'|les? )?(?:auteurs?|sp|fdo|sia|police|pompiers|samu|pm|bac|victime|cr veut|cr ne|agent veut|[0-2]?\dh[0-5]\d)(?![a-zà-ÿ]))/gi,'. ');
+ t.split(/[.!?;\n]+|,\s+|\s+et qui\s+|,?\s+(?:et puis|puis|ensuite|après ça|après cela|du coup|et là|à ce moment-là|entre temps|entre-temps)\s+/i).forEach(s=>{
+  s.split(/,\s+(?=(?:et\s+)?(?:il|elle|ils|elles|on|je|j'|le|la|les|l'|un|une|des|deux|trois|l'auteur|la victime|les pompiers|la police|l'équipe|le conducteur|le chauffeur|nous)\s)|\s+et\s+(?=(?:il|elle|ils|elles|on|je|j'|nous|l'auteur|la victime|les pompiers|le sp|la police|les fdo|l'équipe|le conducteur|le chauffeur|le pc)\s)/i).forEach(x=>{x=x.replace(/^\s*(et|mais|alors|donc|bon|voilà|ok|en fait|bref)\s+/i,'').trim();if(x.length>2)out.push(x)})});
+ return out}
 
-RÉSEAU :
-${netTxt()}
-
-Réponds uniquement avec ce JSON : {"id":0,"alt":[],"cible":null,"mode":null,"ligne":null,"arret":null,"prec":null,"heure":null,"consequences":"","mesures":""}`;
- const r=await SAMPLE.json(p,{modelTier:'default'});return r&&typeof r==='object'?Object.assign(r,{src:'ia'}):null}
-async function aiFill(o,c,text){if(!SAMPLE)return null;const L=mcList(c);
- const tp=L.map(x=>{let k=0;return `CLÉ ${x.k} — ${x.t.label}${c.mcs.length>1?' ('+x.m.title+')':''}\n`+x.t.text.replace(/\{([^}]*)\}/g,(_,f)=>`[[${k++}: ${f}]]`)+(MCX[x.id]&&MCX[x.id].fins&&MCX[x.id].fins.length?`\nFINS POSSIBLES : ${MCX[x.id].fins.join(' | ')}`:'')}).join('\n\n');
- const p=`Tu prépares le commentaire de main courante du PC Sécurité TCL à partir d'une déclaration et de modèles officiels.
-DÉCLARATION : """${text.replace(/"""/g,'')}"""
-Lieu saisi : ${[ligneStr(o.f),lieuStr(o.f)].filter(Boolean).join(' – ')||'non précisé'}. Heure : ${o.f.heure||''}.
-
-MODÈLES (les champs à remplir sont notés [[numéro: indication]] ; une indication « a / b / c » est un choix parmi ces options exactes) :
-${tp}
-
-Consignes : choisis la CLÉ du modèle qui colle le mieux à la situation. Pour chaque champ de CE modèle, donne la valeur d'après la déclaration (option exacte pour les choix) ; laisse "" si l'information n'est pas dans la déclaration. fin = une des FINS POSSIBLES seulement si la déclaration le dit, sinon "". N'invente rien.
-Réponds uniquement avec ce JSON : {"tpl":"CLÉ","fields":{"0":""},"fin":""}`;
- const r=await SAMPLE.json(p,{modelTier:'default'});return r&&typeof r==='object'?r:null}
-// ---------- validation + création
-function cleanResult(a,text){const f={};const M=NET.modes.map(x=>x[0]);
- let id=(a.id!=null&&a.id!==''&&Number.isInteger(+a.id)&&ISIS[+a.id])?+a.id:null;
- const alt=(Array.isArray(a.alt)?a.alt:[]).filter(x=>x!=null&&x!=='').map(Number).filter(i=>Number.isInteger(i)&&ISIS[i]&&i!==id).slice(0,2);
- const cible=a.cible==='A'||a.cible==='V'?a.cible:null;
- f.mode=M.includes(a.mode)?a.mode:null;
- if(f.mode&&a.ligne){const lo=(NET.lines[f.mode]||[]).find(l=>norm(l.id)===norm(String(a.ligne).replace(/\s/g,'')));f.ligne=lo?lo.id:null;
-  if(!lo&&f.mode==='bus')f.ligne=String(a.ligne).toUpperCase().replace(/\s/g,'')}
+// ---------- 3. lieu
+function stopsIn(n,pool){const hits=[];pool.forEach(s=>{const k=norm(s);if(k.length>3&&n.includes(k))hits.push(s)});
+ // retire les arrêts contenus dans un arrêt plus long trouvé
+ return hits.filter(s=>!hits.some(o=>o!==s&&norm(o).includes(norm(s))))}
+function place(t,now){const f={mode:null,ligne:null,arret:null,prec:null,dir:null,veh:null};let m;
+ const n=' '+norm(t)+' ';
+ const cand=[];let mm;const rx=(re,fn)=>{re.lastIndex=0;while((mm=re.exec(t))){const r=fn(mm);if(r)cand.push(Object.assign({pos:mm.index},r))}};
+ rx(/m[ée]tro\s*([abcd])(?![a-zà-ÿ])|ligne\s+([abcd])(?![a-zà-ÿ0-9])/gi,m=>({mode:'metro',ligne:(m[1]||m[2]).toUpperCase()}));
+ rx(/(?:^|[.:;]\s*|\s)([ABCD])\s+(?=[A-ZÉ])/g,m=>{const L=m[1];const lo=lineObj('metro',L);const rest=norm(t.slice(m.index+m[0].length,m.index+m[0].length+40));return lo&&lo.stops.some(x=>rest.startsWith(norm(x).split(' ')[0]))?{mode:'metro',ligne:L}:null});
+ rx(/(?<![a-zà-ÿ0-9])T(10|[1-79])(?![0-9])/g,m=>({mode:'tram',ligne:'T'+m[1]}));
+ rx(/(?<![a-zà-ÿ])RX(?![a-zà-ÿ])/g,m=>({mode:'tram',ligne:'RX'}));
+ rx(/(?<![a-zà-ÿ0-9])F([12])(?![0-9])/g,m=>({mode:'funi',ligne:'F'+m[1]}));
+ rx(/navig[oô]ne|navette fluviale|bateau|(?<![a-zà-ÿ])NAV1?(?![a-zà-ÿ0-9])/gi,m=>({mode:'navi',ligne:'NAV1'}));
+ rx(/(?<![a-zà-ÿ0-9])((?:C|TB|PL|ZI|JD|GM|BR|BRF)\d{1,3})(?![0-9])/g,m=>({mode:'bus',ligne:m[1]}));
+ rx(/(?:ligne|bus|du|le|la|sur le|sur la|de la)\s+(\d{1,3}E?)(?![0-9h:])(?!\s*(?:min(?![a-zà-ÿ])|minutes?|ans|individus|personnes|jeunes|voyageurs|euros|€|m(?![a-zà-ÿ'])|mètres|fois|secondes|heures?|h(?![a-zà-ÿ])|mai|juin|juillet|août|janvier|février|mars|avril|septembre|octobre|novembre|décembre))/gi,m=>(/(ligne|bus)\s+\d/i.test(m[0])||/chauffeur|conducteur|conductrice|machiniste|(?<![a-zà-ÿ])bus(?![a-zà-ÿ])|(?<![a-zà-ÿ])cr(?![a-zà-ÿ])/i.test(t)||NET.lines.bus.some(l=>l.id===m[1].toUpperCase()))?{mode:'bus',ligne:m[1].toUpperCase()}:null);
+ rx(/funiculaire|ficelle/gi,m=>({mode:'funi',ligne:null}));
+ cand.sort((a,b)=>a.pos-b.pos);
+ const CORR=/(non pardon|non,? c'était|non,? c'est|pardon|je me suis trompé|enfin non|non attend|plutôt|non je me trompe|enfin|non,? (le|la|ligne))/i;
+ let pickL=cand.find(c=>c.ligne)||cand[0]||null;
+ for(let k=1;k<cand.length;k++){const gap=t.slice(cand[k-1].pos,cand[k].pos);if(gap.length<70&&CORR.test(gap)&&cand[k].ligne)pickL=cand[k]}
+ if(pickL){f.mode=pickL.mode;f.ligne=pickL.ligne}
+ else if(!f.mode&&/(?<![a-zà-ÿ])(bus|autobus|trolley|trolleybus|chauffeur|machiniste)(?![a-zà-ÿ])/i.test(t)){f.mode='bus';f.gen=true}
+ else if(/(?<![a-zà-ÿ])(rame|tram|tramway)(?![a-zà-ÿ])/i.test(t)&&!/m[ée]tro/i.test(t))f.mode='tram';
+ else if(/m[ée]tro/i.test(t))f.mode='metro';
+ // dépôt / UT
+ if(!f.mode||f.mode==='bus'){const ut=NET.lines.ut.find(u=>new RegExp('(d[ée]p[ôo]t|ut|unit[ée] de transport|centre bus)\\s+(de |d\'|du |des )?'+u.t.split(/[ /]/)[0],'i').test(t)||new RegExp(B+u.id+E,'i').test(t));
+  if(ut){f.mode='ut';f.ligne=ut.id}else if(/d[ée]p[ôo]t|(?<![a-zà-ÿ])ut(?![a-zà-ÿ])/i.test(t)&&!f.ligne){f.mode='ut'}}
+ // direction
+ if((m=t.match(/(?<!(?:parti|partie|partis|fuite|enfui|enfuie|enfuis|courant|sauvé|descendu|descendue|course)[a-zà-ÿ ]{0,25})(?:en\s+)?direction\s+(?:de\s+|du\s+|d'|des\s+)?([A-ZÉÈÀÂÎÔa-zà-ÿ0-9'’\- ]{3,40}?)(?=[,.;]|\s+(?:et|il|elle|ils|à|a|vers|avec|puis|où|quand|sur)\s|$)/i))){f.dir=m[1].trim().replace(/^(la|le|les|l')\s+/i,'')}
+ // véhicule
+ if((m=t.match(/(?:rame|bus|v[ée]hicule|voiture|parc|n°)\s*(?:n°|numéro|num[ée]ro)?\s*(\d{3,4})(?![0-9h])/i)))f.veh=m[1];
+ // arrêt / station
  const lo=f.ligne&&lineObj(f.mode,f.ligne);
- if(a.arret){const s=String(a.arret);if(lo&&lo.stops){const hit=lo.stops.find(x=>norm(x)===norm(s));if(hit)f.arret=hit;else f.prec=s}else f.arret=s}
- if(a.prec)f.prec=[f.prec,String(a.prec)].filter(Boolean).join(' – ');
- if(f.mode==='autre'&&f.arret){f.prec=[f.arret,f.prec].filter(Boolean).join(' – ');f.arret=''}
- f.heure=/^([01]\d|2[0-3]):[0-5]\d$/.test(a.heure||'')?a.heure:null;f.dayBack=!!a.dayBack;
- return {id,alt,cible,f,co:String(a.consequences||'').slice(0,200),me:String(a.mesures||'').slice(0,200),src:a.src}}
-async function voiceGo(){
- const text=($('#vtext').value||'').trim();const res=$('#vres');
- if(text.length<6){toast('Dis ou écris d\'abord ce qui se passe');$('#vtext').focus();return}
- if(DICT&&$('#vmic').classList.contains('on')){try{await DICT.stop()}catch(e){}}
- const btn=$('#vgo');btn.disabled=true;btn.textContent='Analyse en cours…';res.innerHTML='';
- let a=null;
- try{a=await Promise.race([aiAnalyse(text),new Promise((_,rj)=>setTimeout(()=>rj(new Error('délai')),30000))])}catch(e){a=null}
- if(!a||a.id==null||!ISIS[+a.id])a=localAnalyse(text);
- const r=cleanResult(a,text);
- if(r.id==null){btn.disabled=false;btn.textContent='Créer la fiche';
-  res.innerHTML=`<div class="card" style="margin-top:12px"><b>Je n'ai pas reconnu le type de fait.</b><div class="sub">Choisis-le dans les familles ISIS, ou reformule.</div><div class="btns"><button class="btn" id="vtree">Choisir dans les familles</button></div></div>`;
-  $('#vtree').onclick=()=>{window._voicePending={text,f:r.f,co:r.co,me:r.me};go('isis',{p:[]})};return}
- const row=ISIS[r.id];let cible=r.cible;if(cible&&!(row.m&&row.m[cible]))cible=null;
- const now=new Date();
- const base={isis:r.id,cible:cible||(row.c==='A'?'A':row.c==='V'?'V':row.c==='-'?'-':'A/V'),f:{date:r.f.dayBack?(()=>{const d=new Date(now.getTime()-864e5);return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())})():todayIso(),heure:r.f.heure||hhmm(now),mode:r.f.mode||'',ligne:r.f.ligne||'',arret:r.f.arret||'',prec:r.f.prec||''},tcl:{co:r.co,me:r.me},mc:{},voice:{text,alt:r.alt,src:r.src}};
- const c=ctxFrom(base);base.logi=c.logi;base.title=c.title;
- if(r.src==='ia'){btn.textContent='Rédaction de la main courante…';
-  try{const fl=await Promise.race([aiFill(base,c,text),new Promise((_,rj)=>setTimeout(()=>rj(new Error('délai')),30000))]);
-   const L=mcList(c);const tp=fl&&L.find(x=>x.k===fl.tpl);
-   if(tp){const v={};let k=0;tp.t.text.replace(/\{([^}]*)\}/g,(_,f)=>{const i=k++;const val=fl.fields&&fl.fields[i]!=null?String(fl.fields[i]).trim():'';if(val){if(isOpt(f)){const opt=f.split(' / ').find(o=>norm(o)===norm(val));if(opt)v[i]=opt}else v[i]=val.slice(0,120)}return ''});
-    const fins=(MCX[tp.id]&&MCX[tp.id].fins)||[];base.mc={k:tp.k,v,fin:fins.includes(fl.fin)?fl.fin:'',man:false}}}catch(e){}}
- btn.disabled=false;btn.textContent='Créer la fiche';
- newInc(base);toast('Fiche créée : vérifie les éléments');
-}
-function voiceBanner(o){const v=o.voice;if(!v)return '';const r=o.isis!=null?ISIS[o.isis]:null;
- return `<div class="vban"><div class="vq">🎙 « ${esc(v.text)} »</div><div class="sub">Fiche pré-remplie automatiquement — vérifie le fait, le lieu et les messages avant de les utiliser.</div>
- ${r&&needCible(r)?`<div class="vrow"><span>Victime :</span>${['A','V'].map(k=>`<button class="chip ${o.cible===k?'on':''}" data-vc="${k}">${CIB[k]}</button>`).join('')}</div>`:''}
- ${(v.alt||[]).length?`<div class="vrow"><span>Autre fait ?</span>${v.alt.map(i=>`<button class="chip" data-valt="${i}">${esc(ISIS[i].n)}</button>`).join('')}</div>`:''}</div>`}
-function bindVoiceBanner(id){
- view.querySelectorAll('[data-vc]').forEach(b=>b.onclick=()=>{const z=getInc(id);z.cible=b.dataset.vc;const c=ctxFrom(z);z.logi=c.logi;z.mc={};saveInc(z);renderFiche(getInc(id))});
- view.querySelectorAll('[data-valt]').forEach(b=>b.onclick=()=>{const z=getInc(id);const ni=+b.dataset.valt;const old=z.isis;z.isis=ni;const row=ISIS[ni];
-  if(!(row.m&&row.m[z.cible]))z.cible=row.c==='A'?'A':row.c==='V'?'V':row.c==='-'?'-':'A/V';
-  const c=ctxFrom(z);z.logi=c.logi;z.title=c.title;z.mc={};z.tcl=Object.assign({},z.tcl,{lv:undefined,man:false});
-  z.voice.alt=[old,...z.voice.alt.filter(i=>i!==ni)].filter(i=>i!=null).slice(0,3);saveInc(z);renderFiche(getInc(id));toast('Fait modifié')});
-}
+ const nNoDir=f.dir?n.replace(norm(f.dir),' '):n;
+ let pool=lo&&lo.stops?lo.stops:ALLSTOPS;
+ let hits=stopsIn(nNoDir,pool);let exactHit=hits.length>0;
+ if(!hits.length&&lo&&lo.stops){const h2=stopsIn(nNoDir,ALLSTOPS);if(h2.length)hits=h2}
+ const SW=/^(gare|place|hotel|ville|centre|lycee|mairie|saint|sainte|pont|parc|porte|route|quai|rue|universite|college|avenue|grand|petite|charles|jean|marcel|louis|vaulx|velin|decines|meyzieu|venissieux|villeurbanne|priest|fons|oullins|lyon)$/;
+ if(!hits.length){pool.forEach(s=>{const w=norm(s).split(/[\s\-]+/).filter(x=>x.length>3&&!SW.test(x));if(w.length&&w.every(x=>new RegExp(B+x+E).test(nNoDir)))hits.push(s)})}
+ if(!hits.length){const sc=pool.map(s=>{const w=norm(s).split(/[\s\-']+/).filter(x=>x.length>=4&&!SW.test(x));return [s,w.filter(x=>new RegExp(B+x+E).test(nNoDir)).length]}).filter(x=>x[1]>0).sort((a,b)=>b[1]-a[1]);
+  if(sc.length&&(sc.length===1||sc[0][1]>sc[1][1])&&(lo&&lo.stops||sc[0][1]>=2))hits=[sc[0][0]]
+  else if(!lo||!lo.stops){const tok={};ALLSTOPS.forEach(st=>norm(st).split(/[\s\-']+/).filter(x=>x.length>=6&&!SW.test(x)).forEach(x=>{(tok[x]=tok[x]||new Set()).add(st)}));const one=Object.keys(tok).filter(x=>tok[x].size===1&&new RegExp(B+x+E).test(nNoDir));if(one.length===1)hits=[[...tok[one[0]]][0]]}}
+ if(hits.length){// premier cité dans le texte
+  hits.sort((a,b)=>nNoDir.indexOf(norm(a).split(' ')[0])-nNoDir.indexOf(norm(b).split(' ')[0]));const best=hits[0];
+  const Lb=[].concat(...['metro','tram','funi','navi'].map(md=>NET.lines[md].filter(l=>l.stops.includes(best)).map(l=>[md,l])));
+  if(f.gen&&Lb.length&&hits.length===1&&exactHit){f.mode=Lb[0][0];if(Lb.length===1)f.ligne=Lb[0][1].id;f.arret=best}
+  else if(f.mode&&f.mode!=='autre'&&f.mode!=='ut'){f.arret=best}
+  else if(!f.mode){const L=[].concat(...['metro','tram','funi','navi'].map(md=>NET.lines[md].filter(l=>l.stops.includes(best)).map(l=>[md,l])));
+   const pref=/m[ée]tro|station|quai/i.test(t)?L.filter(x=>x[0]==='metro'):/tram|rame/i.test(t)?L.filter(x=>x[0]==='tram'):[];
+   const pick=pref.length===1?pref[0]:L.length===1?L[0]:null;
+   if(pick){f.mode=pick[0];f.ligne=pick[1].id;f.arret=best}else if(pref.length>1&&pref.every(x=>x[0]===pref[0][0])){f.mode=pref[0][0];f.arret=best}else{f.mode='autre';f.prec=best}}
+  else if(f.mode==='ut'){}}
+ if(!f.arret&&!f.prec&&(m=t.match(/(?:à l'arr[êe]t|l'arr[êe]t|arr[êe]t|à la station|station|à hauteur d[eu]|au niveau d[eu]|devant|au terminus d[eu]|au terminus|au carrefour d[eu])\s+(?:de |du |d')?([^,.;]{3,50}?)(?=[,.;]|\s+(?:et|il|elle|ils|vers|avec|puis|où|quand|sur|par|direction|en direction|il y a)\s|$)/i))){
+  let a=m[1].replace(/\s+\d{2}h\d{2}.*$/,'').replace(/^(la|le|les|l')\s+/i,'').trim();if(/^(suivant|précédent|d'après|d'avant|prochain|d'en face|du bus|du tram)/i.test(a))a='';
+  const st=ALLSTOPS.filter(x=>norm(x).startsWith(norm(a))&&norm(a).length>=5);
+  if(st.length&&(!f.ligne||!lo)){const L=[].concat(...['metro','tram','funi','navi'].map(md=>[].concat(...NET.lines[md].map(l=>st.filter(x=>l.stops.includes(x)).map(x=>[md,l,x])))));const pref=/m[ée]tro|station/i.test(t)?L.filter(x=>x[0]==='metro'):f.mode?L.filter(x=>x[0]===f.mode):L;const names=[...new Set(pref.map(x=>x[2]))];if(pref.length&&names.length===1&&(!f.mode||f.mode==='autre'||f.mode===pref[0][0])){f.mode=pref[0][0];if(pref.length===1)f.ligne=pref[0][1].id;f.arret=names[0];a=''}}
+  if(a&&/^(?:[A-Z]{1,3}\d{1,3}|T\d{1,2}|\d{1,3})$/.test(a))a='';
+  if(a&&!/^(de bus|du bus|de tram|du tram|du m[ée]tro|de la ligne)$/i.test(a)){if(f.mode==='bus'||f.mode==='tram'||f.mode==='metro'||f.mode==='funi')f.arret=a.charAt(0).toUpperCase()+a.slice(1);else{f.mode=f.mode||'autre';f.prec=a}}}
+ if(!f.arret&&!f.prec&&(!f.mode||f.mode==='bus'||f.mode==='autre')&&(m=t.match(/(?:^|\s)(?:à|au|aux|vers|devant|près de|sur la place|place)\s+((?:La |Le |Les |L')?[A-ZÉÈÂ][a-zà-ÿ'’\-]+(?:[\s\-]+(?:de |du |des |d'|la |le |sur |en |aux )*[A-ZÉÈÂ0-9][a-zà-ÿ'’\-]*)*)/))){const a=m[1].trim();if(!/^(?:[A-Z]{1,3}\d{1,3}|T\d{1,2}|SIA|PC|ADS|AL|CR|SP|SAMU|Police|Lyon)$/.test(a)&&a.length>2){if(f.mode==='bus')f.arret=a;else{f.mode=f.mode||'autre';f.prec=a}}}
+ // précision
+ const pr=[];
+ if(/sur le quai|à quai|(?<![a-zà-ÿ])quai(?![a-zà-ÿ])/i.test(t)&&f.mode!=='bus')pr.push('sur le quai');
+ else if(/à bord|dans (la|le) (rame|bus|tram|métro|véhicule|wagon)|dans la rame|dans le bus/i.test(t))pr.push(f.mode==='bus'?'à bord du véhicule':f.mode==='metro'||f.mode==='tram'?'à bord de la rame':'à bord');
+ if(/escalator|escalier m[ée]canique/i.test(t))pr.push('escalator');else if(/escalier/i.test(t))pr.push('escaliers');
+ if(/(?<![a-zà-ÿ])ascenseur/i.test(t))pr.push('ascenseur');
+ if((m=t.match(/(?:accès|sortie)\s+(?:n°\s*)?(\d{1,2})/i)))pr.push('accès '+m[1]);
+ if(/tunnel|inter-?station|entre deux stations/i.test(t))pr.push('en tunnel');
+ if(f.veh)pr.push((f.mode==='bus'?'véhicule ':'rame ')+f.veh);
+ if(pr.length)f.prec=[f.prec,...pr].filter(Boolean).join(' – ');
+ return f}
 
+// ---------- 4. heures
+function parseTimes(cl,now){// renvoie [{i,h}] ; h = "HH:MM"
+ const out=[];cl.forEach((c,i)=>{let m;
+  if((m=c.match(/il y a\s+(?:environ\s+|à peu près\s+)?(\d{1,3}|une?|deux|trois|quatre|cinq|dix|quinze|vingt|trente|quarante|cinquante)\s*(min|minutes?|h|heures?|mn)(?![a-zà-ÿ])/i))){const q=isNaN(+m[1])?NUMW[m[1].toLowerCase()]||1:+m[1];const d=new Date(now.getTime()-q*(/^h/i.test(m[2])?3600000:60000));out.push({i,h:pad(d.getHours())+':'+pad(d.getMinutes()),back:d.toDateString()!==now.toDateString()})}
+  else if(/il y a (une|1) demi-heure|il y a une demie? heure/i.test(c)){const d=new Date(now.getTime()-1800000);out.push({i,h:hhmm(d)})}
+  else if(/il y a un quart d'heure/i.test(c)){const d=new Date(now.getTime()-900000);out.push({i,h:hhmm(d)})}
+  else if((m=c.match(/(?<![0-9])([0-2]?\d)h00\s+(et quart|et demie?|moins le quart|moins quart)/i))){let hh=+m[1],mm=/quart/.test(m[2])?15:30;if(/moins/.test(m[2])){hh=(hh+23)%24;mm=45}out.push({i,h:pad(hh)+':'+pad(mm)})}
+  else if((m=c.match(/(?<![0-9])([0-2]\d)h([0-5]\d)(?![0-9])/g))){const L=m[m.length-1].match(/([0-2]\d)h([0-5]\d)/);out.push({i,h:(m.length>1&&/(non|enfin|plutôt|pardon)/i.test(c)?L[1]+':'+L[2]:m[0].replace('h',':'))})}
+  else if(/midi et quart/i.test(c))out.push({i,h:'12:15'});else if(/minuit et quart/i.test(c))out.push({i,h:'00:15'});else if(/minuit et demi/i.test(c))out.push({i,h:'00:30'});else if(/minuit/i.test(c))out.push({i,h:'00:00'});
+  else if(/midi et demi/i.test(c))out.push({i,h:'12:30'});else if(/(?<![a-zà-ÿ])midi(?![a-zà-ÿ])/i.test(c)&&!/après-midi/i.test(c))out.push({i,h:'12:00'});
+  else if(/(à l'instant|à l'heure actuelle|en ce moment|actuellement|vient de|viennent de)/i.test(c)&&!out.length)out.push({i,h:hhmm(now),now:true})});
+ for(let k=out.length-1;k>0;k--){const c=cl[out[k].i]||'';if(out[k].i-out[k-1].i<=2&&/(non|enfin|plutôt|pardon|je veux dire|en fait|c'était)/i.test(c+' '+(cl[out[k].i-1]||'').slice(-25)))out.splice(k-1,1)}
+ out.forEach(x=>{if(x.back==null){const [hh,mm]=x.h.split(':').map(Number);x.back=hh*60+mm>now.getHours()*60+now.getMinutes()+30}});
+ return out}
+
+// ---------- 5. fait
+const AGT=W("chauffeur|chauffeuse|conducteur|conductrice|agent|agente|contr[ôo]leur|contr[ôo]leuse|cr|al|ads|sia|dci|machiniste|r[ée]gulateur|notre agent|notre conducteur|nos agents|agents?\\s+tcl|vérificateur|médiateur|ams?");
+const VOY=W("personne|dame|femme|homme|monsieur|fille|garçon|collégien[a-zà-ÿ]*|lycéen[a-zà-ÿ]*|écoliers?|écolières?|des filles|des femmes|des enfants|des jeunes filles|voyageurs?|voyageuses?|usagers?|usagère|passagers?|passagère|clients?|cliente|jeune femme|jeune fille|une femme|une dame|un homme|un monsieur|une personne|un enfant|une adolescente|un adolescent|une étudiante|un étudiant|une mamie|un papi|une personne âgée");
+const NEG="(?:pas de |pas d'|aucun |aucune |sans |ni )";
+function has(t,re){return re.test(t)}
+const R=(s)=>new RegExp(s,'i');
+function faitScore(t,ctx){// t = texte normalisé sans les noms d'arrêts
+ const S={};const add=(re,i,w)=>{if(re.test(t)){const k=typeof i==='function'?i():i;if(k!=null&&k>=0)S[k]=Math.max(S[k]||0,w)}};
+ const agent=ctx.agent,sp=ctx.sp,blesse=ctx.blesse,arme=ctx.arme,contact=ctx.contact;
+ const P=re=>ISIS.findIndex(r=>re.test(r.n));
+ // atteintes sexuelles
+ add(W("viol|violée|violer|tentative de viol"),agent?P(/Viols ou tentatives de viol sur agents/):P(/Viols ou tentatives de viol sur voyageurs/),100);
+ add(R("attouch|frott|touch[a-zà-ÿ]* (les |aux |ses |la |sa |le )?(fesses|seins|poitrine|cuisses?|parties)|main aux fesses|main sur (les|ses) (fesses|cuisses)|tripot|pelot|agression sexuelle"),P(/Frotteurs/),95);
+ add(R("exhib|se masturb|montre (son sexe|ses parties)|parties génitales|sexe à l'air|harc[eè]lement sexuel|harc[eè]le sexuellement"),P(/Exhibitionnistes/),90);
+ add(R("harc[eè]l[a-zà-ÿ]*")&&!/mendi/.test(t)?R("harc[eè]l[a-zà-ÿ]*"):/^$/,P(/Exhibitionnistes/),60);
+ add(R("outrage sexiste|outrages sexistes|propos sexistes|remarques? sexistes|commentaires? sexistes|sexiste|siffl[a-zà-ÿ]*|drague lourde|dragu[a-zà-ÿ]* (de manière|lourdement)"),P(/Outrages sexistes/),80);
+ add(R("film[a-zà-ÿ]* (sous|la jupe|une femme|une voyageuse|une fille)|sous (sa |la )jupe|upskirt|photos? (sous|de sa)|prend des photos d'une"),P(/Prise de vidéos/),92);
+ // suicide / décès
+ add(R("suicid|s'est jet[ée]e?|se jette|se jeter|s'est allong[ée]e? sur (la|les) voies?|mettre fin à ses jours|en finir|accident de personne|personne (heurtée|percutée) par (la|le) (rame|métro|tram)|sous (la|le) (rame|métro|tram) (volontairement)?"),P(/Suicide/),97);
+ add(R("d[ée]c[èe]s|d[ée]c[ée]d[ée]|(?<![a-z])(?<!de )mort(?![a-z])(?! de rire)|sans vie|corps sans vie|cadavre|ne respire plus et|arr[êe]t cardiaque (fatal|mortel)"),P(/Décès/),96);
+ // armes
+ if(arme){add(R(".*"),contact||/(?<![a-z])(coups? de couteau|poignard|bless[a-zà-ÿ]* (au|à l'arme|par arme)|planté|tir[ée]? sur|coup de feu|balle|lacér)/.test(t)?P(/Agressions physiques avec armes/):(ctx.vol?(agent?P(/Vol avec armes sur agents/):P(/Vol avec armes sur voyageurs/)):P(/exhibition d'arme/)),88)}
+ add(R("attentat|kamikaze|ceinture d'explosif"),P(/Agressions physiques avec armes/),89);
+ // vol
+ if(ctx.vol){const tv=t.replace(/(aucune|sans|pas de|ni) (violences?|menaces?)|rien senti|sans (le|la) (toucher|menacer)|personne (ne )?l'a (menacé|touché|frappé)|(il|elle|on) (ne )?l'a pas (menacé|touché|frappé)/g,'');const viol=contact||/(?<![a-z])(arrach|menac|violence|frapp|bouscul|pouss|force|braqu|racket)/.test(tv);add(R(".*"),viol?(agent?P(/Vol avec violence ou menaces sur agents/):P(/Vol avec violence ou menaces sur voyageurs/)):(agent?P(/Vols simple sur agents/):P(/Vols simple sur voyageurs/)),contact?82:75)}
+ add(R("effraction|fractur[a-zà-ÿ]*|forc[ée]e? (la |le )?(caisse|porte|serrure|monnayeur|distributeur)|(caisse|porte|serrure|monnayeur|distributeur)[^.,;]{0,25}forcé|pied de biche|cambriol|monnayeur (a été )?vidé"),P(/Vols avec effraction/),84);
+ // violences
+ add(R("crach|cracher|crachat|lacrymo|gaz (lacrymo|poivre)|bombe (au poivre|lacrymo)|aspers|jet[a-zà-ÿ]* (une |sa |de )?(boisson|canette|bouteille|liquide|eau|café) (sur|au visage)|lanc[a-zà-ÿ]* (une |sa )?(boisson|canette|bouteille|objet) (sur|au visage|à la figure)"),P(/contact indirect/),78);
+ add(R("rixe|bagarre|baston|se battent|se battaient|se sont battus|échanges? de coups|[ée]chauffour|r[èe]glement de compte|groupes? (de jeunes )?qui se (battent|frappent)"),P(/Rixes/),76);
+ if(contact&&!ctx.vol&&!arme){if(agent&&ctx.victimA&&/rixe|bagarre|se battent|se battaient/.test(t))S[P(/contact direct/)]=79;add(R(".*"),/rébellion|refus[a-zà-ÿ]* (le |du )?contr[ôo]le|soustraction|se soustrai|en voulant contr[ôo]ler|lors d'un contr[ôo]le|lors du contr[ôo]le|bouscul[a-zà-ÿ]*.*contr[ôo]l|contr[ôo]l[a-zà-ÿ]*.*bouscul/.test(t)&&agent?P(/Rébellions/):P(/contact direct/),74)}
+ add(R("bouscul|pouss[ée] (l'agent|le contr|notre)|rébellion|refus d'obtemp"),agent?P(/Rébellions/):-1,62);
+ add(R("laser"),/(aucune gêne|aucune atteinte|sans atteinte|pas de gêne|sans gêne|pas atteint|sans (l'|les? )?atteindre|n'a pas été (touché|atteint)|pas (été )?touché|rien de grave)/.test(t)?P(/Visées lasers de conducteurs/):/(touch|atteint|ébloui|eblou|aveugl|gên[a-zà-ÿ]* (à|a) l'(œil|oeil)|mal (à|aux) (l'|les )?(œil|oeil|yeux)|dans l'(œil|oeil)|dans les yeux|au visage)/.test(t)?P(/Violences volontaires sur agents par visée laser/):P(/Visées lasers de conducteurs/),85);
+ add(R("menac[a-zà-ÿ]* de mort|menac[a-zà-ÿ]* de (le |la |l')?tuer|(va|allait|aller|veut) (le |la |l'|te |vous )?(tuer|buter|planter|crever)|je vais te tuer|t'es mort|te crever|égorger"),P(/menaces de mort/),79);
+ add(R("racis|raciste|sale (noir|arabe|blanc|juif|bougnoule|négro)|antis[ée]mit|homophob|propos (sexistes|religieux|haineux)|insultes? (racistes|homophobes|antisémites)"),P(/racistes\/sexistes/),79);
+ add(R("insult|injur|outrag|menac|invectiv|traité de|traite de|noms? d'oiseaux|propos (déplacés|injurieux|insultants)|agress[a-zà-ÿ]* verbal|verbalement|hurle sur|crie sur"),agent?P(/Menaces et outrages sur agents/):P(/Menaces de violences ou injures/),50);
+ // biens
+ add(R("(?<![a-z])tags?(?![a-z])|tagu|graff|peinture sur|bomb[ée] (à la peinture|de peinture)|inscription"),()=>{const mr=/rame|(?<![a-z])bus(?![a-z])|v[ée]hicule|wagon|voiture|cabine|tram(?![a-z])|matériel roulant/.test(t)&&!/murs? de la station|abribus|abri tram/.test(t);const intr=ctx.intr;const pol=/politi|racis|haineux|nazi|croix gamm|antis[ée]mit|menac|acab|anti-?police|anti-?flic|slogans?|haine/.test(t);return pol?P(/propos politiques/):mr?(intr?P(/Tags sur MR avec intrusion/):P(/^Tags sur MR$/)):(intr?P(/Tags sur infrastructures avec intrusion/):P(/^Tags sur infrastructures$/))},70);
+ add(R("caillou|caillass|pierres?(?![a-z])|projectiles?|jets? (de |d')|jet[a-zà-ÿ]* (un|une|des) (objet|bouteille|canette|pierre|caillou)|mortier|tir[a-zà-ÿ]* (de |des )?(mortier|feux d'artifice)|pétard|bris de (vitre|glace)|vitre (cass|bris|[ée]toil|explos)|pare-brise (cass|[ée]toil|bris)"),()=>{const bris=/cass|bris|[ée]toil|explos|fissur|endommag|impact/.test(t)&&!/(sans|pas de|aucun) (dég|bris|casse|dommage)/.test(t);return bris?P(/Jets de projectile avec bris/):P(/Jets de projectiles sans bris/)},73);
+ add(R("incendie|(?<![a-z])feu(?![a-z])(?! (rouge|vert|tricolore|de signalisation|d'artifice))|fum[ée]e|flammes?|br[ûu]l[a-zà-ÿ]*|odeur de br[ûu]l|cramé"),()=>/volontair|mis le feu|met le feu|allum[a-zà-ÿ]* (un |le )?feu|incendiaire|individus? (a|ont) (mis|allumé)/.test(t)||/pétard|fumigène|molotov|incendi[ée]e?s?(?! accidentel)/.test(t)?P(/Incendies ou départ de feu volontaires/):P(/Incendies ou départ de feu accidentels/),84);
+ add(R("d[ée]grad|vandal|explos[ée]e?s?(?! de (joie|rire))|cass[ée]s?(?! la gueule)|cass[a-zà-ÿ]* (la|le|les|une|un) |bris[ée]|d[ée]fonc|arrach[a-zà-ÿ]* (le|la|les|un|une) (siège|marteau|extincteur|panneau|vitre|porte|caméra|borne|rétroviseur|essuie)|(rétroviseur|essuie-glace|siège|marteau|panneau|caméra|borne)s? arrach|tap[a-zà-ÿ]* sur (la carrosserie|le bus|la rame|les vitres)|vid[ée] (un |l')?extincteur|lacér[a-zà-ÿ]*|éventr|crev[a-zà-ÿ]* (les )?pneus?|souill|vomi|urin|excrément|autocollants?|affiches?"),()=>{const mr=/rame|(?<![a-z])bus(?![a-z])|v[ée]hicule|wagon|siège/.test(t)||(/tram(?![a-z])/.test(t)&&!/abri|arr[êe]t|quai|station|panneau|borne|distributeur/.test(t));const leg=/vomi|urin|souill|autocollant|affiche|petit|léger|excrément|cutter/.test(t);return leg?(mr?P(/Dégradations légères \/ souillures dans MR/):P(/Dégradations légères \/ souillures sur infra/)):(mr?P(/Dégradations volontaires \/ vandalisme sur MR/):P(/Dégradations volontaires \/ vandalisme sur infra/))},/vomi|urin|souill|autocollant|affiche|petit|léger|excrément/.test(t)?45:62);
+ // colis / alerte
+ add(R("colis|bagage (abandonn|oubli|suspect)|sac (abandonn|oubli|suspect|isolé)|valise (abandonn|oubli|suspect)|objet (abandonn|suspect)|paquet suspect"),P(/colis suspects/),83);
+ if(/(pas|plus) (une |d')?(alerte à la bombe|bombe)|c'est pas une alerte|ce n'est pas une alerte/.test(t))t=t.replace(/alerte à la bombe|bombe/g,'');
+ add(R("alerte à la bombe|(?<![a-z])bombe(?! (au poivre|lacrymo|de peinture))|menace d'attentat|fausse alerte|appel anonyme|engin explosif"),P(/faux attentats/),86);
+ // service
+ add(R("accident|collision|percut|accrochage|accroch[a-zà-ÿ]* (avec|un|une|par)|heurt[a-zà-ÿ]* (un|une|par)|carambol|(?<![a-z])choc(?![a-z])|a tamponné|s'est fait (percuter|accrocher|heurter)|renvers[a-zà-ÿ]* (un|une|par)"),()=>{if(/accident de personne/.test(t))return -1;const tiers=/(entre deux|deux voitures|accident de (la )?circulation (devant|à côté|sur la voie publique)|hors tcl|ne concerne pas|accident sur la (route|voie publique))/.test(t)&&!/(bus|tram|rame|métro|conducteur|chauffeur)[a-zà-ÿ]* (a |est |percut|heurt)/.test(t);return tiers?P(/Accidents de tiers/):(sp?P(/Accidents de véhicules TCL avec intervention/):P(/Accidents de véhicules TCL avec blessés légers/))},/après l'accident|suite à l'accident de ce matin|l'accident de (ce matin|tout à l'heure|hier)/.test(t)?30:(/accident|collision|percut|accrochage|accroch[a-zà-ÿ]* (une|un) (voiture|véhicule|vl|scooter|moto|piéton|cycliste|vélo|camion)/.test(t)&&!ctx.armeP?80:72));
+ add(R("tram ?surf|accroch[a-zà-ÿ]* (à|a) l'arrière|accroch[a-zà-ÿ]* derrière (la|le)|sur l'attelage|surf[a-zà-ÿ]* sur"),P(/tramsurfing/),81);
+ add(R("tunnel|sur les voies|sur la voie|descen[a-zà-ÿ]* (sur |dans )?(la|les) voies?|pi[ée]ton sur (la|les) voies?|marche sur (la|les) voies?|personne sur (la|les) voies?|le long des voies|(près|à proximité) des voies|(sur|dans) les emprises"),()=>/suicid|se jet|mettre fin/.test(t)?-1:P(/Descentes/),66);
+ add(R("intrusion|intrus|escalad|s'introdui|introduit|pénétr[a-zà-ÿ]* (dans|sur) (le|la|l')|par[- ]dessus (le |la )?(grillage|clôture|portail)"),()=>ctx.tag?-1:P(/intrusions sans dégradation/),64);
+ add(R("alarme|rupteur|arr[êe]t d'urgence|poign[ée]e d'(urgence|alarme)|tir[ée] (le |la )?signal|signal d'alarme|interphone d'urgence|bouton d'arr[êe]t"),()=>/incendie|feu|fumée/.test(t)?-1:P(/Manipulations/),58);
+ add(R("(mis|mettent|posé|placé)[a-zà-ÿ]* (des |un |une )?(cailloux|caddies?|objets?|obstacles?|pierres|barrières?|poubelles?|trottinettes?)[^.;]{0,25}sur (la|les) voies?|obstacles? sur (la|les) voies?"),P(/Entraves volontaires/),80);
+ add(R("(mis|mettent|posé|placé|jeté)[a-zà-ÿ]* (des |un |une )?(cailloux|caddies?|objets?|obstacles?|pierres|barrières?|poubelles?|trottinettes?)[^.;]{0,25}sur (la|les) voies?|obstacles? sur (la|les) voies?|bloqu[a-zà-ÿ]* (les |la |des )?portes?|retien[a-zà-ÿ]* (les |la )?portes?|emp[êe]ch[a-zà-ÿ]* (le |la )?(départ|tram|bus|rame|de partir|fermeture)|entrave|devant le (tram|bus)|couch[a-zà-ÿ]* devant|bloque le (bus|tram)|forcer les portes"),P(/Entraves volontaires/),63);
+ add(R("ligne (coup[ée]e|interrompue|arr[êe]t[ée]e|d[ée]vi[ée]e|suspendue|neutralis[ée]e)|interruption (de la ligne|de trafic|totale|du trafic)|trafic (interrompu|coupé|suspendu)|d[ée]viation|(?<![a-z])d[ée]vi[ée]e?s?(?![a-z])|ligne(s)? (limitée|limitées)|services? partiels?|terminus partiel"),P(/Lignes arrêtées, déviées/),40);
+ add(R("(mise en place|mettre en place|met en place|mis en place|déclench[a-zà-ÿ]*) (d'un |du |une |le |la )?(prm|prt|prf)|(?<![a-z])(prm|prt|prf)(?![a-z])"),P(/Mise en place PRM/),42);
+ add(R("reprise (de l'exploitation|d'exploitation|du trafic|normale|de la ligne|du service|de la circulation)|le trafic reprend|la ligne reprend|circulation (rétablie|normale)|trafic rétabli"),P(/Reprises d'exploitation/),/^\s*(#\s*)?(la )?reprise|^\s*(le )?trafic (reprend|rétabli)/.test(t.trim())?93:35);
+ // personnes
+ add(R("malaise|inconscient|[ée]vanoui|perdu connaissance|perte de connaissance|ne r[ée]pond plus|convuls|crise d'[ée]pilepsie|ne bouge plus|allong[ée] (au sol|par terre)|au sol(?! (glissant|mouillé))|se sent mal|sent pas bien|douleur (à la |à la )?poitrine|arr[êe]t cardiaque|hypoglyc|diab[ée]tique|fait un (malaise|af)"),()=>sp?P(/Malaise.*avec intervention/):P(/Malaise.*sans intervention/),68);
+ add(R("chute|tomb[ée]|chut[ée]|gliss[ée]|trébuch|s'est blessé|se blesse|coinc[ée] (dans|par|entre) (les |la )?portes?|pris (le pied|la main|le bras) dans|mal (à la|au|aux) (cheville|genou|jambe|bras|tête|dos|poignet|hanche|main|pied)|se plaint de douleurs?|douleurs? (au|à la|aux)"),()=>sp?P(/Malaise.*avec intervention/):P(/Malaise.*sans intervention/),67);
+ add(R("enfant[^.,;]{0,25}(seul|perdu|trouvé|sans (ses )?parents)|(a|ont) perdu (sa|son|ses) (maman|mère|papa|père|parents|famille)|ne retrouve (plus )?(sa|son|ses) (maman|mère|papa|père|parents)|perdu(?! connaissance)(?! son| sa| ses| un| une)|perdue(?! connaissance)|[ée]gar[ée]|d[ée]sorient[ée]|enfant (seul|perdu|tout seul|sans ses parents|trouvé)|fugu|alzheimer|ne sait (plus )?(où|qui)|personne vulnérable|maraude|samu social"),P(/Assistance à des tiers/),69);
+ add(R("ivre|(?<![a-z])ipm(?![a-z])|alcoolis|ivresse|bourr[ée]|saoul|soûl|alcool(?! interdit)|a trop bu|bouteille (d'alcool|de vodka|de bière)"),P(/Ivresse/),57);
+ add(R("mendi|fait la manche|demande de l'argent|r[ée]clame de l'argent"),P(/Mendicité/),59);
+ add(R("squat|sdf|sans[- ]abri|sans domicile|dort (dans|sur)|dorment|campement|matelas|install[ée]s? (dans|sur) (le|la|les)|pickpocket"),()=>/pickpocket/.test(t)&&ctx.vol?-1:P(/Squats/),55);
+ add(R("stup|drogue|(?<![a-z])deal|dealer|trafic de|cannabis|(?<![a-z])shit(?![a-z])|joint|crack|héro[iï]ne|cocaïne|seringue|fum[a-zà-ÿ]* (un joint|du shit|de la drogue)|point de deal|guetteurs?"),P(/stupéfiants/),61);
+ add(R("fum[a-zà-ÿ]* (une )?(cigarette|clope|chicha|vapoteuse|cigarette électronique)|(?<![a-z])fume(?![a-z])|cigarette|clope|vapote|musique (forte|à fond|trop forte)|enceinte|volume sonore|vocif|hurle(?! sur)|crie(?! sur)|bruyant|tapage|comportement (anormal|bizarre|étrange|incohérent)|chante|danse|pieds sur les sièges|importune"),P(/Fumeurs/),52);
+ add(R("trottinette|(?<![a-z])v[ée]lo(?![a-z])|skate|gyropode|hoverboard|monoroue|roller"),P(/transports personnel/),48);
+ add(R("stationn|voiture (g[êe]nante|garée|mal garée|en double file|sur la (plateforme|voie|site propre))|v[ée]hicule (g[êe]nant|mal stationné|ventouse)|gar[ée]e? sur (la |le )?(voie|plateforme|site propre|arrêt|couloir)|rod[ée]o|camion (de livraison )?(garé|bloque|gêne)|livreur (garé|bloque)|en double file|bloque le passage du (bus|tram)"),P(/Circulations ou stationnements/),56);
+ add(R("chien|animal|animaux|(?<![a-z])chats?(?![a-z])|serpent|cheval|(?<![a-z])nac(?![a-z])|muselière"),P(/animaux/),54);
+ add(R("fraud|sans (titre|ticket|billet)|refuse de payer|ne paie pas|pas de (titre|ticket)|resquill|saute (le|les) (portique|tourniquet|valideur)|enjambe"),P(/Fraudeurs/),47);
+ add(R("m[ée]dia|journalist|presse|cam[ée]ra (de |d'une )?t[ée]l[ée]|bfm|réseaux sociaux|buzz|vidéo (qui )?circule|tiktok|twitter"),P(/^Tous sujets avec impact médiatique/),71);
+ add(R("manifestation|manif(?![a-z])|rassemblement|cortège|émeute|violences urbaines|bouchon|embouteillage|travaux"),()=>P(/Lignes arrêtées, déviées/),38);
+ add(R("sécuris[a-zà-ÿ]* (le |un |du |ce )?(secteur|site|quartier|lieux|arrêt|pôle)|patrouille (de )?sécurisation|présence dissuasive"),P(/Sécurisation d'un secteur/),60);
+ add(R("perturbation|fermeture (de la |de )?station|station fermée|ferm[a-zà-ÿ]* (la |une )?station|aide à l'exploitation|régulation (du flux|des flux)|flux de voyageurs|affluence|saturation|surcharge|inondation|inondée|fuite d'eau|dégât des eaux|réorient[a-zà-ÿ]*|panne (d'escalator|d'ascenseur|électrique)"),P(/Aide à l'exploitation/),58);
+ return S}
+
+function detectCtx(t){const neg=s=>new RegExp('(?:pas de|pas d\'|aucun|aucune|sans|ni|refuse|refus|ne veut pas|ne souhaite pas|pas besoin)\\s+(?:les |des |l\'|d\'|de |la )?(?:'+s+')','i');
+ const SP='pompiers?|sp|sdmis|samu|secours|ambulance|smur|vsav';
+ const spAny=new RegExp(B+'(?:'+SP+')'+E,'i').test(t);const spNeg=neg(SP).test(t)&&!/(pompiers?|sp|sdmis|samu|secours|ambulance) (sont |est |arrivent|sur place|appel|prévenu|avis|demand|en route|contact|engag|interv|prenn|transport|évacu)/i.test(t.replace(neg(SP),''));
+ const sp=spAny&&!spNeg&&!/(refuse|ne veut pas|ne souhaite pas|décline|n'a pas voulu|a pas voulu|voulait pas|veut pas)[^.,;]{0,30}?(pompiers|secours|(?<![a-zà-ÿ])sp(?![a-zà-ÿ])|samu|ambulance)/i.test(t);
+ const blesse=/bless|saign|ensanglant|plaie|hématome|fracture|contusion|douleur|arcade|nez cassé|ouvert(e)? (à|au)/i.test(t)&&!/(pas|aucun|sans|ni) (de )?bless|pas bless|non bless|indemne/i.test(t);
+ const arme=new RegExp(B+'(armes?|couteau|couteaux|lame|cutter|pistolet|revolver|arme à feu|flingue|machette|tournevis|hachette|hache|batte|barre de fer|matraque|poing américain|taser|sabre|poignard|ciseaux|seringue (pointée|brandie)|tesson|bouteille cassée)'+E,'i').test(t)&&!/(sans|pas d'|aucune) arme/i.test(t);
+ const contact=new RegExp(B+'(frapp[a-zà-ÿ]*|coups?(?! de (fil|téléphone|main|pouce|chance|stress|bol|vent))|tabass[a-zà-ÿ]*|cogn[a-zà-ÿ]*|gifl[a-zà-ÿ]*|claque|coups? de poings?|coup de pied|coups de pied|mordu|morsure|mord|étrangl[a-zà-ÿ]*|griff[a-zà-ÿ]*|bless[a-zà-ÿ]* par|roué|violences? (physiques?|volontaires?)|agress[a-zà-ÿ]* physiquement|agression physique|agressé physiquement|a été agressé|vient de se faire agresser|s\'est fait agresser|se fait agresser|bouscul[a-zà-ÿ]*|pouss[ée]e?s? (par terre|au sol|à terre|violemment|contre|dans)|l\'a pouss[ée]e?|les a pouss[ée]s|a pouss[ée] (le|la|l\')|plaqu[a-zà-ÿ]* (au sol|contre|à terre)|mis à terre|jet[a-zà-ÿ]* au sol|tir[a-zà-ÿ]* les cheveux|attrap[a-zà-ÿ]* (par|à) (le|la|les) (col|gorge|cou|bras))'+E,'i').test(t.replace(/s'est cogn[a-zà-ÿ]*|se cogne|s'est pris (la|le|les) (porte|pied|marche|barre)/gi,''))&&!/agress[a-zà-ÿ]* verbal/i.test(t)&&!/(pas de|aucun|aucune|sans|ni) (coups?|violences?|contact)(?![a-zà-ÿ])|(l'a|les a|m'a|t'a|nous a)? ?pas touch|n'a pas (été )?touch|(il|elle|ils) (ne )?l'a pas touch/i.test(t);
+ const vol=new RegExp(B+'(vol|volé|volée|volés|voler|vole|volent|volait|volaient|dérob[a-zà-ÿ]*|à l\'arraché|arrach[a-zà-ÿ]* (son|sa|ses|un|une|le|la|les) (sac|téléphone|portable|collier|chaîne|montre|bijou|bijoux|lunettes|casquette|sacoche|écouteurs|airpods)|piqu[a-zà-ÿ]* (son|sa|ses|le|la|mon)|subtilis[a-zà-ÿ]*|pickpocket|racket[a-zà-ÿ]*|braqu[a-zà-ÿ]*|braquage|chopé (son|sa)|pris (son|sa) (téléphone|portable|sac|portefeuille)|(parti|reparti|partis|enfui|sauvé) avec (la caisse|son|sa|ses|le sac|la recette)|vid[ée] (la caisse|le monnayeur))'+E,'i').test(t.replace(/(rien|pas) (de )?(vol|volé|pris)(?![a-zà-ÿ])|n'a rien (volé|pris)|ont rien (volé|pris)|a rien (volé|pris)|pas de vol/gi,''))&&!/vol (plané|au-dessus)|survol/i.test(t);
+  const intr=/intrusion|intrus|escalad|s'introdui|introduit|pénétr|par[- ]dessus/i.test(t.replace(/(pas d'|sans |aucune )intrusion/gi,''));
+ const tag=/(?<![a-z])tags?(?![a-z])|tagu|graff/i.test(t);
+ const victimA=/(chauffeur|chauffeuse|conducteur|conductrice|agent|agente|contr[ôo]leu[a-zà-ÿ]*|(?<![a-z])cr(?![a-z])|(?<![a-z])al(?![a-z])|machiniste|médiateur|vérificateur)[a-zà-ÿ]*\s+(?:du |de la |de |d')?(?:[A-Z]{0,3}\d{0,3}\s+)?(?:[a-zà-ÿ]+\s+)?(s'est fait|s'est faite|s'est pris|s'est prise|a [ée]t[ée]|vient de se faire|se fait|se prend|est (victime|agress|frapp|insult|menac|bless|mordu|bouscul|tabass|cogn|touché|ébloui|atteint|visé)|agress|frapp|insult|menac|bless|mordu|cogn|victime|subit|reçoit|a reçu|a pris|prend|ébloui|atteint|touché)|(agress[a-zà-ÿ]*|frapp[a-zà-ÿ]*|insult[a-zà-ÿ]*|menac[a-zà-ÿ]*|crach[a-zà-ÿ]*|bless[a-zà-ÿ]*|mord[a-zà-ÿ]*|bouscul[a-zà-ÿ]*|tabass[a-zà-ÿ]*|cogn[a-zà-ÿ]*|pouss[a-zà-ÿ]*|outrag[a-zà-ÿ]*|invectiv[a-zà-ÿ]*|vis[a-zà-ÿ]*|ébloui[a-zà-ÿ]*|vol[a-zà-ÿ]*|racket[a-zà-ÿ]*)(?:\s+(?:sur|au visage|à la figure|dessus|au nez)){0,2}\s+(un |une |le |la |l'|notre |nos |les |du |au |de la |à la )?(chauffeur|chauffeuse|conducteur|conductrice|agents?|contr[ôo]leu[a-zà-ÿ]*|machiniste|(?<![a-z])cr(?![a-z])|(?<![a-z])al(?![a-z])|médiateur)|(?:sur|contre|envers|à l'encontre d[eu']|au|à l'|à la)\s+(?:un |une |le |la |l'|notre |nos )?(chauffeur|conducteur|conductrice|agents?|contr[ôo]leu[a-zà-ÿ]*|machiniste)/i.test(t);
+ const victimV=/(voyageu[a-zà-ÿ]*|usag[a-zà-ÿ]*|passag[a-zà-ÿ]*|client[a-zà-ÿ]*|femme|dame|homme|personne|jeune|enfant|fille|garçon|étudiant[a-zà-ÿ]*|mamie|papi|individu)\s+(?:[a-zà-ÿ]+\s+)?(s'est fait|s'est faite|a [ée]t[ée]|vient de se faire|se fait|est (victime|agress|frapp|insult|menac|bless|volé)|victime|a reçu|reçoit)|(agress[a-zà-ÿ]*|frapp[a-zà-ÿ]*|insult[a-zà-ÿ]*|menac[a-zà-ÿ]*|bless[a-zà-ÿ]*|vol[a-zà-ÿ]*|arrach[a-zà-ÿ]*|touch[a-zà-ÿ]*|bouscul[a-zà-ÿ]*)\s+(un |une |la |le |l'|des )?(voyageu[a-zà-ÿ]*|usag[a-zà-ÿ]*|passag[a-zà-ÿ]*|cliente?|femme|dame|jeune fille|personne âgée|enfant)|(?:sur|contre|envers|à l'encontre d[eu'])\s+(?:un |une |la |le |l'|des )?(voyageu[a-zà-ÿ]*|usag[a-zà-ÿ]*|passag[a-zà-ÿ]*|cliente?|femme|dame)|(?:son|sa|ses) (téléphone|portable|sac|portefeuille|collier|chaîne|montre|vélo|trottinette)/i.test(t);
+ const pron=/(cr|chauffeur|chauffeuse|conducteur|conductrice|agent|contr[ôo]leu[a-zà-ÿ]*|machiniste)[^.]{0,50}?(m'appelle|appelle|signale|me dit|m'informe|informe|prévient|indique)\s*,?\s*(qu'|que )?(il|elle|on lui|on l'|quelqu'un lui|quelqu'un l') ?(vient de se faire|s'est fait|s'est faite|a été|se fait|a |est (victime|agress|frapp|insult|menac|bless|mordu|bouscul|touch))/i.test(t)||/(chauffeur|chauffeuse|conducteur|conductrice|agent|agente|contr[ôo]leu[a-zà-ÿ]*)[^.]{0,90}?(il|elle) (a pris|a reçu|s'est pris|s'est prise|prend|reçoit) (un|des|une) (coups?|gifle|claque|crachat)/i.test(t)||/(conducteur|chauffeur|conductrice|agent|contr[ôo]leu[a-zà-ÿ]*|cr)\s+(veut|va|souhaite|compte|doit)\s+(porter|déposer|faire)\s+(une )?plainte/i.test(t);
+ const vA=victimA||pron;
+ const ia=t.search(/chauffeur|conducteur|conductrice|agent|contr[ôo]leu|machiniste/i),iv=t.search(/voyageu|usag|passag|client|femme|dame|personne|jeune/i);
+ let agent=vA&&!victimV?true:victimV&&!vA?false:vA&&victimV?(pron||iv<0||(ia>=0&&ia<iv)):(AGT.test(t)&&!VOY.test(t));
+ // le conducteur qui signale n'est pas la victime : « le conducteur signale qu'un voyageur... »
+ if(agent&&!pron&&/(chauffeur|conducteur|conductrice|cr|agent|pc [a-zà-ÿ]+)\s+(nous |m')?(signale|appelle|informe|rapporte|indique|prévient|dit)\s+(qu'|que |pour )/i.test(t)&&victimV)agent=false;
+ const objOnly=!victimA&&!victimV&&!/victime|bless|(?<![a-zà-ÿ])(lui|le conducteur|la conductrice|l'agent)(?![a-zà-ÿ])/i.test(t)&&/(cass|bris|explos|défonc|vandal|dégrad|lacér|tagu|fractur|forc[ée])/i.test(t);const objOnly2=objOnly&&!vA;return {sp,spNeg,blesse,arme:arme&&!objOnly2,contact:contact&&!objOnly2,vol,intr,tag,agent,victimA:vA,victimV}}
+
+// ---------- 6. intervenants, issue, conséquences
+const ACTOR=[
+ ['sp','les pompiers',/(?<![a-z])(pompiers?|sp|sdmis|vsav|secours|smur|ambulance|ambulanciers?)(?![a-z])/i],
+ ['samu','le SAMU',/(?<![a-z])(samu|15)(?![a-z0-9])(?! ?(min|minutes|ans))/i],
+ ['pn','les forces de l\'ordre',/(?<![a-z])(police nationale|police(?! municipale)|policiers?|(?<![a-z])pn(?![a-z])|bac(?![a-z])|fdo|forces de l'ordre|gendarm[a-zà-ÿ]*|flics?|17(?![0-9h]))(?![a-z])/i],
+ ['pm','la police municipale',/(?<![a-z])(police municipale|(?<![a-z])pm(?![a-z])|municipaux)(?![a-z])/i],
+ ['sia','une équipe SIA',/(?<![a-z])(sia|équipe (de )?(sûreté|sécurité|d'intervention)|patrouille|agents? (de )?(sûreté|sécurité)|gpsr|l'équipe|une équipe|les agents (sont|arrivent|interviennent))(?![a-z])/i],
+ ['ads','les ADS',/(?<![a-z])(ads|agents? de sécurité)(?![a-z])/i],
+ ['dci','la DCI',/(?<![a-z])(dci)(?![a-z])/i],
+ ['am','l\'agent de maîtrise',/(?<![a-z])(am|agent de maîtrise|maîtrise|régulateur|encadrement|chef d'équipe|sa hiérarchie|son responsable|astreinte (bus|tram|métro|ut))(?![a-z])/i],
+ ['pcbus','le PC Bus',/pc[ -]?bus/i],['pctram','le PC Tram',/pc[ -]?tram/i],['pcmetro','le PC Métro',/pc[ -]?m[ée]tro|pcc/i],
+ ['codir','l\'astreinte CODIR',/codir|astreinte direction|cadre d'astreinte/i],['ds','le Directeur Sûreté',/directeur (de la )?sûreté/i],
+ ['demin','le service de déminage',/d[ée]minage|d[ée]mineurs?/i]];
+const ST_ON=/emmen[a-zà-ÿ]*|est passée?|sont passés|sont venus|est venue?|avec les pompiers|partie? avec|l'ont pris|sur place|arriv[a-zà-ÿ]*|présents?|interv[a-zà-ÿ]*|prenn[a-zà-ÿ]* en charge|prise? en charge|prend en charge|s'occupe|s'occupent|est là|sont là|engag[a-zà-ÿ]* sur|interpell[a-zà-ÿ]*|ont interpell|maîtris[a-zà-ÿ]*|évacu[a-zà-ÿ]*|transport[a-zà-ÿ]*|sécuris[a-zà-ÿ]*/i;
+const ST_AV=/appel[a-zà-ÿ]*|prévenu[a-zà-ÿ]*|préviens|prévient|avis[a-zà-ÿ]*|demand[a-zà-ÿ]*|contact[a-zà-ÿ]*|alert[a-zà-ÿ]*|missionn[a-zà-ÿ]*|envoy[a-zà-ÿ]*|envoie|engag[a-zà-ÿ]*|en route|en cours d'arrivée|déclench[a-zà-ÿ]*|sollicit[a-zà-ÿ]*|requis|j'ai fait le 1[578]|fait le 1[578]/i;
+function actors(cl){const A={};
+ cl.forEach((c,i)=>{ACTOR.forEach(([k,lab,re])=>{if(!re.test(c))return;
+  if(k==='sia'&&/l'équipe|une équipe|patrouille/i.test(c)&&/pompier|sp(?![a-z])|police|bac|samu/i.test(c)&&!/(sia|sûreté|sécurité)/i.test(c))return;
+  if(k==='sp'&&/(pas de|aucun|sans|refuse|refus|ne veut pas|ne souhaite pas|pas besoin|n'a pas voulu|a pas voulu|voulait pas)[^.,;]{0,30}?(pompiers?|secours|(?<![a-zà-ÿ])sp(?![a-zà-ÿ])|ambulance)/i.test(c)){A.sp=Object.assign(A.sp||{},{refus:true,i});return}
+  if(k==='samu'&&!/samu/i.test(c))return;
+  if((new RegExp("(pas de|pas d'|pas besoin d[e']|sans|aucune?|ni|n'ont pas|pas)\\s+(la |les |l'|le |des |une |un |d')?(?:"+re.source+")","i").test(c)||new RegExp("(?:"+re.source+")\\s+(?:ne sont |n'est |ne )?(pas|non) (avis|appel|prévenu|venu|nécessaire|requis|demand)","i").test(c))&&!/(sont|est) (sur place|avis|appel)/i.test(c)){if(k==='sp')A.sp=Object.assign(A.sp||{},{refus:true,i});return}
+  const st=ST_ON.test(c)?'on':ST_AV.test(c)?'av':'av';const o=A[k]=A[k]||{k,lab,i};if(st==='on'||!o.st)o.st=st;
+ })});return A}
+function outcome(t){const o={};let m0;
+ if(/(?<![a-z])(interpell[a-zà-ÿ]*|arr[êe]t[ée]s? par (la police|les policiers|la bac|les fdo)|menott[a-zà-ÿ]*|placé en (garde à vue|gav)|maîtris[a-zà-ÿ]* par|retenu par|retenue par|appréhend[a-zà-ÿ]*)(?![a-z])/i.test(t))o.aut='interpellé';else if(/(attrap[ée]|ont retenu|l'ont retenu|retenu par|(police|policiers|bac)[^.,;]{0,15}l'(a|ont) (emmené|embarqué|pris)|emmené par la police|embarqué par)/i.test(t))o.aut='interpellé';else if(/(remis|remise|confié) (à la police|aux policiers|aux fdo|aux forces de l'ordre|à la bac)|récupér[a-zà-ÿ]* par (la police|les policiers|la bac|les fdo)|pris en charge par (la police|les policiers|la bac)/i.test(t))o.aut='interpellé';
+ else if(/(toujours (présent|sur place|là|dans|à bord)|est encore (là|dans|présent|à bord)|reste sur place|refuse de (descendre|sortir|partir|quitter)|ça dure|depuis plusieurs minutes|toujours en cours)/i.test(t))o.aut='present';
+ else if(/(pris la fuite|prend la fuite|prennent la fuite|s'enfui[a-zà-ÿ]*|s'est enfui|enfui|en fuite|s'est sauvé|se sauve|se sont sauvés|(?<![a-zà-ÿ])(?:re)?partis?e?s?(?![a-zà-ÿ])|a quitté les lieux|quitte les lieux|quittent les lieux|ont quitté|(?:il|elle|ils|elles|l'auteur|l'individu|les individus) (?:est |sont )?descendue?s?|descendue?s? (?:à|au|du|de la) (?:l'arrêt|la station|arrêt|bus|tram|rame)|a disparu|s'échapp[a-zà-ÿ]*|introuvable|plus là|auteurs? (est |sont )?(descendu|parti|en fuite|enfui)[a-zà-ÿ]*|(?:^|[.,:]\s*)descendue?s?(?![a-zà-ÿ])|fuite à l'arrivée|s'est barré|se barre|se sont barrés|s'est tiré|se sont tirés|s'est cassé|dispers[a-zà-ÿ]*|ont filé|a filé)/i.test(t))o.aut='fuite';if((m0=t.match(/descend[a-zà-ÿ]*\s+(?:à|a)\s+(?:l'arr[êe]t\s+|la station\s+)?([A-ZÉ][^,.;]{2,40}?)(?=[,.;]|\s+(?:et|il|elle)\s|$)/)))o.desc=m0[1].trim();
+  let m;if(o.aut==='fuite'&&(m=t.match(/(?:fuite|enfui[a-zà-ÿ]*|parti[a-zà-ÿ]*|sauvé|courant|couru)\s+(?:à pied\s+|en courant\s+|en trottinette\s+|à vélo\s+|en voiture\s+|en scooter\s+)?(?:en\s+)?(?:direction|vers|en direction)\s+(?:de\s+|d')?((?:du |des |la |le |les |l')?[^,.;]{3,40}?)(?=[,.;]|\s+(?:et|il|elle|ils)\s|$)/i)))o.dir=m[1].trim();
+ if(/(?<![a-z])(transport[a-zà-ÿ]*|évacu[a-zà-ÿ]*|achemin[a-zà-ÿ]*|conduit[a-zà-ÿ]*|emmen[a-zà-ÿ]*|part[a-zà-ÿ]*) (à|a|vers|sur) (l'h[ôo]pital|un h[ôo]pital|un centre hospitalier|les urgences|l'hosto|h[ée]h|lyon sud|édouard herriot|la croix-rousse|saint-joseph|saint-luc|femme mère enfant|mermoz|clinique)/i.test(t)||/hospitalis[a-zà-ÿ]*|transport[a-zà-ÿ]* (aux|à l') urgences/i.test(t)){o.hop=true;if((m=t.match(/h[ôo]pital\s+(?:de\s+|d'|du\s+)?(édouard herriot|lyon sud|de la croix-rousse|croix-rousse|saint-joseph saint-luc|saint-joseph|femme mère enfant|nord-ouest|de villefranche|des charpennes|[A-ZÉ][a-zà-ÿA-ZÉ\- ]{2,30})/i)))o.hopN=m[1].replace(/^de la /i,'');else if(/(?<![a-z])h[ée]h(?![a-z])|édouard herriot/i.test(t))o.hopN='Édouard Herriot';else if(/lyon sud/i.test(t))o.hopN='Lyon Sud'}
+ if(/(refuse|ne veut pas|ne souhaite pas|décline|n'a pas voulu|a pas voulu|voulait pas|veut pas)[^.,;]{0,30}?(pompiers|secours|(?<![a-zà-ÿ])sp(?![a-zà-ÿ])|soins|samu|ambulance)|refus de (prise en charge|soins|transport)/i.test(t))o.refus=true;
+ if(/(?<![a-z])(ne (veut|souhaite) pas|refuse de|ne va pas|pas de) (porter |déposer )?plainte|pas de plainte/i.test(t))o.plainte='non';
+ else if(/plainte|porter plainte|déposer plainte|dépôt de plainte/i.test(t))o.plainte='oui';
+ if(/(retrait|extraction|réquisition|sauvegarde|conserv[a-zà-ÿ]*|récupér[a-zà-ÿ]*|demande)\s+(des |de la |d'une |la |les )?(vidéo|vidéos|images|bandes)/i.test(t)||/vidéo (à|a) (conserver|extraire|sauvegarder)/i.test(t))o.video=true;
+ if(/(interrompt|arr[êe]te|cesse|ne peut pas reprendre|ne reprend pas|ne reprendra pas|ne finira pas|stoppe|quitte) (son |le )?(service|travail|poste)|rentre (chez lui|au dépôt)|relev[ée] de son service|arr[êe]t de travail|en arr[êe]t/i.test(t))o.svc='stop';
+ else if(/reprend (son )?(service|exploitation|la route|sa ligne)|continue (son )?(service|exploitation|sa route)/i.test(t))o.svc='reprend';
+ if(/(très )?choqu[ée]/i.test(t))o.choc=true;
+ if(/plaquette|aide aux victimes|france victimes/i.test(t))o.plaq=true;
+ return o}
+function conseq(cl){const C=[];const add=x=>{if(!C.includes(x))C.push(x)};
+ cl.forEach(c=>{let m;
+  if(/(ligne|trafic|circulation|exploitation|service)\s+([a-zà-ÿ]+\s+)?(interromp[a-zà-ÿ]*|coup[ée]e?|arr[êe]t[ée]e?|suspendu[a-zà-ÿ]*|neutralis[a-zà-ÿ]*|bloqu[ée]e?)|interruption|plus de (trafic|circulation)|coupure (de )?(la )?(traction|courant|ligne)/i.test(c)){m=c.match(/entre\s+([^,.;]{3,40}?)\s+et\s+([^,.;]{3,40}?)(?=[,.;]|\s+(?:et|il|elle|pendant|depuis|à cause)\s|$)/i);add(m?'Trafic interrompu entre '+cap(m[1])+' et '+cap(m[2]):'Trafic interrompu')}
+  if(/(?<![a-z])(prm|prt|prf)(?![a-z])/i.test(c)){m=c.match(/(?<![a-z])(prm|prt|prf)(?![a-z])(?:\s+(?:mis en place|en place))?(?:\s+entre\s+([^,.;]{3,40}?)\s+et\s+([^,.;]{3,40}?)(?=[,.;]|\s|$))?/i);add(m[1].toUpperCase()+(m[2]?' entre '+cap(m[2])+' et '+cap(m[3]):' mis en place'))}
+  if(/services? partiels?|terminus partiel/i.test(c))add('Services partiels');
+  if(/d[ée]vi[a-zà-ÿ]*|d[ée]viation/i.test(c))add('Ligne déviée');
+  if(/retard|perturb/i.test(c))add('Retards / perturbations');
+  if(/(rame|bus|v[ée]hicule|tram)\s+([a-zà-ÿ]+\s+)?(retir[a-zà-ÿ]*|immobilis[a-zà-ÿ]*|hors service|hs|garé[a-zà-ÿ]*|rentré[a-zà-ÿ]* au dépôt|remis(e)? au dépôt)|haut[- ]le[- ]pied|(?<![a-z])hlp(?![a-z])|changement de (bus|véhicule|rame)|rentre au dépôt|retour (au )?dépôt/i.test(c))add(/immobilis/i.test(c)?'Véhicule immobilisé':/dépôt/i.test(c)?'Véhicule rentré au dépôt':/hlp|haut[- ]le|changement/i.test(c)?'HLP / changement de véhicule':'Véhicule retiré du service');
+  if(/station (fermée|évacuée)|fermeture (de la |de )?station|évacu[a-zà-ÿ]* (de )?la station|évacu[a-zà-ÿ]* (de )?la rame|évacu[a-zà-ÿ]* (du |le )?(bus|véhicule)|évacue les voyageurs/i.test(c))add(/station/i.test(c)?'Station évacuée / fermée':'Évacuation des voyageurs');
+  if(/périmètre( de sécurité)?/i.test(c))add('Périmètre de sécurité');
+  if(/(service|course)s? non assur|ne peut pas (assurer|reprendre)|interrompt son service|arr[êe]te son service/i.test(c))add('Service non assuré');
+  if(/(pas d'|sans |aucun )impact|pas de (conséquence|perturbation|retard)/i.test(c))add('Pas d\'impact exploitation');
+ });return C}
+const cap=s=>{s=String(s||'').trim();return s.charAt(0).toUpperCase()+s.slice(1)};
+function origin(cl,f){const c0=cl.slice(0,2).join(' ');let m;
+ const pc=c0.match(/pc[ -]?(bus|tram|m[ée]tro)|pcc/i);
+ const who=[
+  [/(?<![a-z])(pc[ -]?bus)/i,'PC Bus'],[/pc[ -]?tram/i,'PC Tram'],[/pc[ -]?m[ée]tro|pcc/i,'PC Métro'],
+  [/(?<![a-z])(cr|chauffeur|chauffeuse|machiniste)(?![a-z])/i,'CR'],[/(?<![a-z])(conducteur|conductrice)(?![a-z])/i,f.mode==='bus'?'CR':'conducteur'],
+  [/(?<![a-z])(al|agent de ligne|agents de ligne)(?![a-z])/i,'AL'],[/(?<![a-z])ads(?![a-z])/i,'ADS'],[/(?<![a-z])sia(?![a-z])|équipe/i,'SIA'],[/(?<![a-z])dci(?![a-z])/i,'DCI'],
+  [/(?<![a-z])(am|agent de maîtrise|régulateur)(?![a-z])/i,'AM'],[/police municipale|(?<![a-z])pm(?![a-z])/i,'PM'],[/police|(?<![a-z])17(?![0-9])|fdo|commissariat/i,'Police'],
+  [/pompiers|sdmis|(?<![a-z])sp(?![a-z])/i,'SDMIS'],[/vidéo|caméra|écrans?|images|je vois|j'ai vu|on voit|on a vu|constat/i,'constat vidéo PCS'],
+  [/voyageu[a-zà-ÿ]*|usag[a-zà-ÿ]*|passag[a-zà-ÿ]*|client[a-zà-ÿ]*|témoin|requérant|une personne (m'|nous )?(appelle|signale)|appel (d'un|d'une|au)/i,'appel voyageur']];
+ for(const s of [cl[0]||'',c0]){const sig=/(appelle|signale|informe|indique|prévient|rapporte|dit|m'a dit|nous dit|demande|me fait remonter|remonte|annonce|fait savoir|déclare|constate|appel de|info|infos|selon|d'après|au téléphone|à la radio|par radio|par téléphone)/i.test(s);
+  for(const [re,lab] of who){if(re.test(s)&&(sig||/constat vidéo/.test(lab))){if(/constat vidéo/.test(lab)&&!/(vidéo|caméra|écran|je vois|j'ai vu|on voit|on a vu)/i.test(s))continue;return lab}}}
+ return null}
+
+// ---------- 7. réécriture des faits (style main courante, au présent)
+function rewrite(s,ctx){let x=' '+s+' ';const f=ctx.f||{};
+ // temps
+ x=x.replace(/,?\s*il y a\s+(?:environ\s+|à peu près\s+)?(\d{1,3}|une?|deux|trois|quatre|cinq|dix|quinze|vingt|trente|quarante|cinquante)\s*(min|minutes?|h|heures?|mn)(?![a-zà-ÿ])/gi,' ');
+ x=x.replace(/,?\s*il y a (une|1) demie?[- ]heure|,?\s*il y a un quart d'heure/gi,' ');
+ x=x.replace(/,?\s*(?:vers|à|aux alentours de|autour de|aux environs de)\s+(?:environ\s+)?[0-2]\dh[0-5]\d/gi,' ').replace(/(^|\s)[0-2]\dh[0-5]\d\s*,?/g,' ');
+ x=x.replace(/\s*(à l'instant|à l'heure actuelle|en ce moment|actuellement)\s*/gi,' ').replace(/^\s*(du matin|du soir|de l'après-midi)(?![a-zà-ÿ])|(?<=\s)(du matin|du soir)(?=[\s,.]|$)/gi,' ').replace(/\s*(il|c')\s*(était|est)\s*(à peu près|environ|vers)?\s*[.,]?\s*$/i,' ');
+ // origine de l'info et formules d'appel
+ x=x.replace(/^\s*(le|la|l'|un|une|notre)?\s*(pc[ -]?(bus|tram|m[ée]tro)|pcc|cr|chauffeur|chauffeuse|conducteur|conductrice|machiniste|al|ads|agent( de ligne)?|équipe sia|sia|am|régulateur|police|voyageur|voyageuse|client|cliente)\s+(du |de la |de |d')?((?:ligne\s+)?[A-Z]{0,3}\d{1,3}E?|T\d{1,2}|m[ée]tro [A-D])?\s*(m'|nous )?(appelle|a appelé|vient d'appeler|signale|informe|indique|prévient|rapporte|dit|me dit|nous dit|m'a dit|me fait remonter|remonte|annonce|déclare|explique)\s*(au téléphone|à la radio|par radio|par téléphone)?\s*(pour (me|nous) (dire|signaler|informer)|et (me|nous) (dit|signale|informe))?\s*(qu'|que |:|,)?\s*/i,' ');
+ x=x.replace(/^\s*(?:j'ai|on a|j'ai eu|on a eu)\s+(?:le|la|l'|un|une)?\s*(?:pc[ -]?(?:bus|tram|m[ée]tro)|pcc|cr|chauffeur|conducteur|conductrice|al|ads|sia|am|police|voyageur|voyageuse)(?:\s+(?:du|de la|de)\s+\S+)?\s+qui\s+(?:m'|nous\s+)?(?:appelle|signale|informe|dit|prévient|appelait)\s*(?:pour (?:me|nous) (?:dire|signaler)\s*)?(?:qu'|que\s+)?/i,' ');
+ x=x.replace(/^\s*(j'ai|je viens d'avoir|on a|on vient d'avoir|j'ai eu|on a eu)\s+(le|la|l'|un|une)?\s*\S+(\s+(du|de la|de)\s+\S+)?\s+(au téléphone|à la radio|en ligne)\s*(qui|,)?\s*(me|nous)?\s*(dit|signale|explique|informe)?\s*(qu'|que)?\s*/i,' ');
+ x=x.replace(/^\s*(info|infos|information)\s+\S+\s*:\s*/i,' ');
+ x=x.replace(/^\s*(alors|donc|bon|voilà|ok|en fait|bref|du coup)\s*,?\s*/i,' ');
+ x=x.replace(/\s*(?:je vois|j'ai vu|on voit|on a vu|on aperçoit|j'aperçois)\s+(?:sur|à|aux|par)\s+(?:les |la )?(?:caméras?|vidéos?|vidéoprotection|écrans?|images)\s*(?:qu'|que )?/i,' ');
+ x=x.replace(/\s*(?:sur|à|aux|par)\s+(?:les |la )?(?:caméras?|vidéos?|vidéoprotection|écrans?)\s*,?\s*(?:je vois|j'ai vu|on voit|on a vu|on aperçoit)\s*(?:qu'|que )?/i,' ');
+ // lieux déjà dans l'en-tête
+ x=x.replace(/^\s*(?:le|la|l')?\s*(?:pc[ -]?(?:bus|tram|m[ée]tro)|pcc|cr|chauffeur|conducteur|al|ads|sia)\s+(?:me |nous )?(?:signale|informe de|rapporte)\s+/i,' ');
+ const rm=[];if(f.arret){rm.push(f.arret);const w=f.arret.split(' ');if(w.length>2&&/^(gare|place|station)$/i.test(w[0]))rm.push(w.slice(1).join(' '));if(w.length>2&&/^gare de$/i.test(w[0]+' '+w[1]))rm.push(w.slice(2).join(' '))}if(f.prec&&!/–/.test(f.prec)&&f.mode==='autre')rm.push(f.prec);
+ rm.forEach(a=>{const r=fuzzyRe(a).source.replace(/^\(\?<!\[a-zà-ÿ0-9\]\)/,'');x=x.replace(new RegExp(",?\\s*(?:de la station|sur le quai de la station|sur le quai de|a|à l'arr[êe]t|l'arr[êe]t|arr[êe]t|à la station|en station|station|à hauteur d[eu]|au niveau d[eu]|à|au|en gare de|à la gare de|devant|au terminus d[eu']?|au terminus|vers|sur le quai d[eu'])?\\s*(?:de |du |d')?"+r,'gi'),' ')});
+ if(f.ligne){const L=f.ligne.replace(/([A-Z]+)(\d+)/,'$1\\s?$2');const id="(?<![A-Za-z0-9])"+L+"(?![A-Za-zà-ÿ0-9'])";
+  x=x.replace(new RegExp(",?\\s*(?:sur|dans|à bord d[eu']|de|du|en)\\s+(?:la |le |l')?(?:ligne\\s+|bus\\s+|tram\\s+|tramway\\s+|métro\\s+|metro\\s+)?(?:de la ligne |du |de la )?"+id,'g'),' ');
+  x=x.replace(new RegExp("(?:la |le )?(?:ligne|métro|metro)\\s+"+id,'g'),' ');
+  x=x.replace(new RegExp("(rame|bus|tram|tramway|véhicule|conducteur|chauffeur|cr|métro)\\s+(?:du |de la |de |sur la |sur le )?(?:ligne\\s+)?"+id,'g'),'$1');
+  if(/^[A-Z]{1,3}\d|^\d|^T\d/.test(f.ligne))x=x.replace(new RegExp(",?\\s*"+id,'g'),' ')}
+ x=x.replace(/\s+(du|de la|de|sur la|sur le|dans la|dans le|à)\s*(?=[,.]|$)/g,' ');
+ // tournures au présent
+ x=x.replace(/(?:vient de se faire|s'est fait|s'est faite|se fait)\s+(voler|arracher|piquer|dérober|prendre)\s+(son|sa|ses|le|la|les)/gi,(m,v,p)=>'se\u0001fait '+v+' '+p);
+ x=x.replace(/(?:vient de se faire|viennent de se faire|s'est fait|s'est faite|se sont fait|se fait|se font)\s+([a-zà-ÿ]+)er(?![a-zà-ÿ])/gi,(m,v)=>(/se sont|se font|viennent/i.test(m)?'sont ':'est ')+v+'é');
+ x=x.replace(/((?:est|sont) [a-zà-ÿ]+é)\s+et\s+([a-zà-ÿ]+)er(?![a-zà-ÿ])/gi,(m,a,v)=>a+' et '+v+'é');
+ x=x.replace(/(?<![a-zà-ÿ])(?:il )?y a\s+(un|une|des|deux|trois|plusieurs)\s+([a-zà-ÿ]+)\s+qui\s+/gi,'$1 $2 ');
+ x=x.replace(/(?<![a-zà-ÿ])(?:(?:mais\s+)?(?:je|le PCS) (?:reprends|reprend|commence) (?:depuis le début|par la fin)|je vous explique)\s*:?/gi,' ');
+ x=x.replace(/(?<!(?:a|ai|ont|lui a|m'a)\s)(?<![a-zà-ÿ])(dit|explique|raconte)\s+(qu'|que\s)/gi,'signale $2').replace(/(?<![a-zà-ÿ])(son|sa|ses) (bus|rame|tram|véhicule)/gi,(m,p,v)=>(v==='rame'?'la ':'le ')+v);
+ x=x.replace(/(?<![a-zà-ÿ])(a|ont) été\s+/gi,(m,a)=>a.toLowerCase()==='ont'?'sont ':'est ');
+ x=x.replace(/(?<![a-zà-ÿ])vient d'être\s+/gi,'est ').replace(/(?<![a-zà-ÿ])viennent d'être\s+/gi,'sont ');
+ x=x.replace(/(?<![a-zà-ÿ])vient de\s+/gi,'').replace(/(?<![a-zà-ÿ])viennent de\s+/gi,'');
+ x=x.replace(/(?<![a-zà-ÿ])il y a\s+(un|une|des|deux|trois|quatre|plusieurs)\s+/gi,'$1 ');
+ x=x.replace(/(?<![a-zà-ÿ])(un mec|un gars|un type|un keum)(?![a-zà-ÿ])/gi,'un individu').replace(/(?<![a-zà-ÿ])(le mec|le gars|le type)(?![a-zà-ÿ])/gi,"l'individu").replace(/(?<![a-zà-ÿ])(des mecs|des gars|des types)(?![a-zà-ÿ])/gi,'des individus').replace(/(?<![a-zà-ÿ])(une meuf|une nana)(?![a-zà-ÿ])/gi,'une femme').replace(/(?<![a-zà-ÿ])chauffeur(?![a-zà-ÿ])/gi,'conducteur').replace(/(?<![a-zà-ÿ])tabass/gi,'frapp').replace(/(?<![a-zà-ÿ])baston(?![a-zà-ÿ])/gi,'bagarre').replace(/(?<![a-zà-ÿ])flics?(?![a-zà-ÿ])/gi,'police');
+ x=x.replace(/(?<![a-zà-ÿ])j'ai\s+/gi,'le PCS a ').replace(/(?<![a-zà-ÿ])je\s+/gi,'le PCS ').replace(/(?<![a-zà-ÿ])on a\s+/gi,'il y a eu ');
+ x=x.replace(/\u0001/g,' ').replace(/(?<![a-zà-ÿ])cr(?![a-zà-ÿ])/g,'CR').replace(/(?<![a-zà-ÿ])(sp)(?![a-zà-ÿ])/g,'SP').replace(/(?<![a-zà-ÿ])(fdo)(?![a-zà-ÿ])/g,'FDO');
+ x=x.replace(/\s+(vers|à|a|de|du|dans|sur|au|aux|et)\s*[,.]?\s*$/i,' ');
+ if(ctx.subj)x=x.replace(/^\s*(il|elle)\s+(?=est|a |se |vient|s')/i,ctx.subj+' ');
+ if(f.prec&&/sur le quai/.test(f.prec))x=x.replace(/\s*(sur le quai|à quai)(?![a-zà-ÿ])/gi,' ');
+ if(f.prec&&/à bord/.test(f.prec))x=x.replace(/\s*(dans la rame|dans le bus|à bord du bus|à bord de la rame|dans le tram|dans le véhicule)(?![a-zà-ÿ])/gi,' ');
+ x=x.replace(/\s+/g,' ').replace(/\s+([,.])/g,'$1').replace(/^[\s,]+|[\s,]+$/g,'');
+ if(!x)return '';x=cap(x);if(!/[.!?]$/.test(x))x+='.';return x}
+const ACTION_CL=/(?<![a-z])(pompiers?|sp|sdmis|samu|secours|ambulance|police|policiers|bac|fdo|forces de l'ordre|gendarm[a-zà-ÿ]*|flics?|pm|sia|équipe|patrouille|ads|dci|am|agent de maîtrise|maîtrise|hiérarchie|pc bus|pc tram|pc métro|pcc|codir|astreinte|déminage|plainte|vidéo|images|caméras?|hôpital|urgences|transport[a-zà-ÿ]*|évacu[a-zà-ÿ]*|interpell[a-zà-ÿ]*|en fuite|pris la fuite|prend la fuite|s'enfui[a-zà-ÿ]*|enfui[a-zà-ÿ]*|parti[a-zà-ÿ]*|quitt[a-zà-ÿ]* les lieux|descendu[a-zà-ÿ]*|reprise|reprend|interromp[a-zà-ÿ]*|interruption|coup[ée]e|hlp|retir[a-zà-ÿ]*|périmètre|prm|prt|prf|services? partiels|dévi[a-zà-ÿ]*|plaquette|choqué[a-zà-ÿ]*|retard[a-zà-ÿ]*|refuse|rentre au dépôt|dépôt|levée de doute|constat)(?![a-z])/i;
+const SUBJ_ACT=/^\s*(?:et\s+)?(?:qui|il|elle|ils|elles|on|je|j'|nous|l'auteur|l'individu|les individus|les auteurs|le mis en cause|les pompiers|le sp|les sp|le sdmis|le samu|la police|les policiers|la bac|les fdo|les forces de l'ordre|la pm|l'équipe|une équipe|la sia|l'ads|les ads|le pc|l'am|l'agent de maîtrise|la victime|le conducteur|le chauffeur|la conductrice|l'agent|le cr)(?![a-zà-ÿ])/i;
+const FACT_CL=/(agress|frapp|coups?(?![a-zé])|caillass|insult|menac|crach|vol|arrach|tag|cass|bris|feu|fumée|malaise|chute|tomb|bless|colis|laser|bagarre|rixe|fume|ivre|alarme|accident|percut|accroch|individu|homme|femme|jeune|voyageu|personne|couteau|arme|dégrad|squat|drogue|suicid|jet|projectile|caillou|pierre|exhib|touch|harcel|film|chien|stationn|voiture|trottinette|vélo|intrus|portes?|décès|mort)/i;
+
+// ---------- 8. analyse complète
+function comprendre(raw,now){now=now||new Date();const t=prep(raw);const cl=clauses(t);
+ const f=place(t,now);
+ const tN=t.replace(/(se faire |te |lui |vous |leur )?(casser|péter|défoncer|exploser|éclater) (la gueule|la figure|la tête|les dents)/gi,' menacer de violences ').replace(/(?<![a-zà-ÿ])(pas de|pas d'|aucune?|sans|ni|rien|n'ont rien|n'a rien|pas)\s+(?:de |d'|été )?(tags?|tagu[a-zà-ÿ]*|jets?|projectiles?|lancé|dégradations?|dégâts?|dégât|vol|volé|cassé|casse|bris|intrusion|interpellation|interpellé|blessés?|blessure|violences?|coups?|menaces?|atteinte|arme|feu|fumée|auteur|incident|plainte|victime)(?![a-zà-ÿ])/gi,' ');
+ const ctx=detectCtx(tN);const tn=stripPlaces(tN);const S=faitScore(tn,ctx);const S2=faitScore(norm(tn),ctx);if(!Object.keys(S).length)Object.assign(S,S2);
+ const ranked=Object.entries(S).map(([k,v])=>[+k,v]).sort((a,b)=>b[1]-a[1]).map(x=>x[0]);
+ let id=ranked.length?ranked[0]:null;const O_PRE=outcome(tN);if(/(pas|ne veut pas|veut pas|souhaite pas|refuse de)[^.,;]{0,20}plainte|pas de plainte/i.test(t))O_PRE.plainte='non';const alt=ranked.slice(1,4);
+ let cible=ctx.agent?'A':(ctx.victimV||VOY.test(t)?'V':null);if(id!=null){const c=ISIS[id].c;if(c==='A'||c==='V'||c==='-')cible=c}
+ if(id!=null&&/Assistance à des tiers|Aide à l'exploitation|Sécurisation|Lignes arrêtées|Mise en place PRM|Reprises/.test(ISIS[id].n))cible='A';
+ if(id!=null&&ISIS[id].f1==='Hors ISIS'&&!/(auteur|individu|agresseur|voleur|mis en cause|automobiliste|conducteur du (véhicule|scooter|vl))/i.test(t))delete O_PRE.aut;
+ const times=parseTimes(cl,now);const T0=times[0];
+ const A=actors(cl);const O=O_PRE;if(O.aut==='interpellé'&&!A.pn&&!A.pm)A.pn={k:'pn',lab:'',st:'on'};const C=conseq(cl);const src=origin(cl,f);
+ // faits = propositions descriptives (pas les actions)
+ const META=/^(?:(?:alors|bon|donc|euh|et)\s+)*(?:en fait\s+)?(?:qui est aussi|y a aussi|il y a aussi|mais là c'était|je (?:reprends|commence|vous explique|reviens|le dis)|pour info$|voilà(?: pour)?|ça change rien|il faisait|je crois|oui|non(?: pardon)?|enfin|plutôt|attendez|pardon)(?![a-zà-ÿ])/i;
+ const facts=[],acts=[];cl.forEach((c,i)=>{const cc=c.replace(/^(?:alors|bon|donc|euh|et)\s+(en fait\s+)?/i,'');if(META.test(cc)&&!/(frapp|agress|insult|menac|crach|vol|arrach|tomb|chut|malaise|bless|tag|cass|feu)/i.test(cc.replace(/^.{0,30}?:/,'')))return;
+  if(cc.split(/\s+/).filter(w=>w.length>2).length<2&&!FACT_CL.test(cc))return;
+  if(/plainte/i.test(c)&&!/(frapp|agress|insult|menac|vol|arrach|crach)/i.test(c)){acts.push(c);return}
+  if(i===0||!facts.length&&FACT_CL.test(c)&&!SUBJ_ACT.test(c)){facts.push(c);return}const fa=FACT_CL.test(c),ac=ACTION_CL.test(c);const isAct=ac&&(!fa||(SUBJ_ACT.test(c)&&!/(frapp|agress|insult|menac|crach|bless|vol|arrach|tomb|chut|malaise|touch)/i.test(c.replace(/^\s*\S+\s+\S+/,'').slice(0,0)+'')&&/(fuite|enfui|parti|quitt|descendu|sur place|avis|appel|prévenu|missionn|envoy|arriv|interpell|plainte|transport|évacu|prend en charge|prennent en charge|pris en charge|reprend|interromp|rentre|choqu|refuse)/i.test(c)));(isAct?acts:facts).push(c)});
+ if(!facts.length&&cl.length)facts.push(cl[0]);
+ const later=times.filter(x=>x.i>0&&T0&&x.h!==T0.h);
+ return {t,cl,id,alt,cible,f:Object.assign(f,{heure:T0?T0.h:null,dayBack:!!(T0&&T0.back)}),hAuto:!T0||!!T0.now,ctx,A,O,C,src,facts,acts,later,times}}
+let _SR=null;function stripPlaces(t){if(!_SR)_SR=ALLSTOPS.slice().sort((a,b)=>b.length-a.length).filter(s=>s.length>3).map(s=>new RegExp(fuzzyRe(s).source,'gi'));let x=' '+String(t).toLowerCase()+' ';_SR.forEach(r=>{x=x.replace(r,' # ')});return x}
+
+// ---------- 9. rédaction
+const ALAB={sp:['Les pompiers sont avisés','Les pompiers sont sur place'],samu:['Le SAMU est avisé','Le SAMU est sur place'],pn:['Les forces de l\'ordre sont avisées','Les forces de l\'ordre sont sur place'],pm:['La police municipale est avisée','La police municipale est sur place'],sia:['Une équipe SIA est missionnée','Une équipe SIA est sur place'],ads:['Les ADS sont avisés','Les ADS sont sur place'],dci:['La DCI est avisée','La DCI est sur place'],am:['L\'agent de maîtrise est avisé','L\'agent de maîtrise est sur place'],pcbus:['PC Bus avisé','PC Bus avisé'],pctram:['PC Tram avisé','PC Tram avisé'],pcmetro:['PC Métro avisé','PC Métro avisé'],codir:['Astreinte CODIR avisée','Astreinte CODIR avisée'],ds:['Directeur Sûreté avisé','Directeur Sûreté avisé'],demin:['Le service de déminage est avisé','Le service de déminage est sur place']};
+const ASHORT={sp:['SP avisés','SP sur place'],samu:['SAMU avisé','SAMU sur place'],pn:['FDO avisées','FDO sur place'],pm:['PM avisée','PM sur place'],sia:['SIA missionnée','SIA sur place'],ads:['ADS avisés','ADS sur place'],dci:['DCI avisée','DCI sur place'],am:['AM avisé','AM sur place'],pcbus:['PC Bus avisé'],pctram:['PC Tram avisé'],pcmetro:['PC Métro avisé'],codir:['astreinte CODIR avisée'],ds:['DS avisé'],demin:['déminage avisé','déminage sur place']};
+function lieuPhrase(f){const L=[];const md=f.mode;
+ if(md==='metro'&&f.ligne)L.push('métro '+f.ligne);else if(md==='bus'&&f.ligne)L.push('ligne '+f.ligne);else if(f.ligne&&md!=='ut')L.push('ligne '+f.ligne);
+ else if(md==='bus')L.push('bus');else if(md==='tram')L.push('tram');else if(md==='metro')L.push('métro');
+ if(md==='ut'&&f.ligne){const u=lineObj('ut',f.ligne);L.push('dépôt '+f.ligne+(u?' '+u.t:''))}
+ if(f.arret)L.push((md==='metro'||md==='funi'?'station ':'arrêt ')+f.arret);
+ if(f.prec)L.push(f.prec);if(f.dir&&!/direction/i.test(f.prec||''))L.push('direction '+f.dir);
+ return L.join(', ')}
+function victimWord(a){const c=a.cible==='A'&&a.ctx&&a.ctx.victimA?'A':'V';return c==='A'?(/(conducteur|conductrice|chauffeur|chauffeuse|(?<![a-zà-ÿ])cr(?![a-zà-ÿ])|machiniste)/i.test(a.t||'')?'le conducteur':'l\'agent'):'la victime'}
+function resultats(a){const O=a.O||{},A=a.A||{};const r=[];const vw=victimWord(a);const V=cap(vw);
+ if(O.hop)r.push(`${V} est prise en charge par les secours et transportée à l'hôpital${O.hopN?' '+cap(O.hopN):''}`.replace('Le conducteur est prise','Le conducteur est pris').replace("L'agent est prise","L'agent est pris").replace(/(Le conducteur|L'agent) est pris en charge par les secours et transportée/,'$1 est pris en charge par les secours et transporté'));
+ else if(O.refus||(A.sp&&A.sp.refus))r.push(`${V} ne souhaite pas l'assistance des secours`);
+ else if(A.sp&&A.sp.st==='on'&&(a.ctx.blesse||/Malaise|Accidents de véhicules TCL avec intervention|contact direct|armes/.test(a.row||'')))r.push(`${V} est prise en charge par les pompiers`.replace(/(Le conducteur|L'agent) est prise/,'$1 est pris'));
+ if(O.choc)r.push(`${V} est choqué${a.cible==='A'?'':'e'}`);
+ if(O.aut==='interpellé')r.push(`L'auteur est interpellé`);else if(O.aut==='fuite')r.push(O.desc&&!O.dir?`L'auteur descend à ${O.desc}`:`L'auteur prend la fuite${O.dir?' en direction '+(/^(du|des)\s/i.test(O.dir)?O.dir:/^(la|les|l')\s?/i.test(O.dir)?'de '+O.dir:/^le\s/i.test(O.dir)?'du '+O.dir.slice(3):'de '+cap(O.dir)):''}`.replace("de l' ","de l'"));else if(O.aut==='present')r.push(`L'auteur est toujours présent`);
+ if(O.svc==='stop'&&a.cible==='A')r.push(`${V} interrompt son service`);else if(O.svc==='reprend')r.push(`${V} reprend son service`);
+ if(O.plaq)r.push(`Remise d'une plaquette Aide aux victimes`);
+ if(O.plainte==='oui')r.push(`${V} va déposer plainte`);else if(O.plainte==='non')r.push(`${V} ne souhaite pas déposer plainte`);
+ if(O.video)r.push(`Demande de retrait vidéo`);
+ return r}
+function mcRecit(a,o){// a = analyse du 1er récit ; o = incident
+ const f=o.f||{};const A=a.A||{};
+ const sia=A.sia?'SIA / ':'';const src=a.src||'PCS';const srcK={'PC Bus':'pcbus','PC Tram':'pctram','PC Métro':'pcmetro'}[src];
+ const h=(f.heure||'').replace(':','h');const lp=lieuPhrase(f);
+ const subj=(src==='CR'||src==='conducteur'||src==='PC Bus'||src==='PC Tram'||src==='PC Métro')&&a.ctx.victimA?'le conducteur':null;
+ const ff=a.facts.map(s=>rewrite(s,{f,subj})).filter(Boolean);
+ let head=`${sia}Info ${src} : ${h?'À '+h:''}${h&&lp?', ':''}${lp}${h||lp?', ':''}`;
+ let body=ff.length?ff.join(' '):'';if(body&&(h||lp)&&!/^[A-ZÉ]{2}|^[A-ZÉ][a-zé]+ [A-ZÉ]/.test(body))body=body.charAt(0).toLowerCase()+body.slice(1);
+ const acts=[];['sia','sp','samu','pn','pm','ads','dci','am','pcbus','pctram','pcmetro','demin','ds','codir'].forEach(k=>{const x=A[k];if(!x||x.refus&&k==='sp')return;if(k==='sia'&&!A.sia)return;if(k===srcK)return;acts.push(ALAB[k][x.st==='on'?1:0])});
+ const cons=(a.C||[]).filter(c=>!/^Pas d'impact/.test(c)).map(c=>c.replace(/^Trafic interrompu/,'Exploitation interrompue'));
+ const res=resultats(Object.assign({},a,{f,cible:o.cible,row:o.isis!=null&&ISIS[o.isis]?ISIS[o.isis].n:''}));
+ let s=(head+body).replace(/,\s*$/,'').trim();if(!/[.!?]$/.test(s))s+='.';
+ const tail=[...acts,...cons,...res].map(x=>cap(x)+'.').join(' ');
+ return (s+' '+tail).replace(/\s+/g,' ').replace(/\.\./g,'.').trim()}
+function suiteLine(e,o){const f=o.f||{};let x=rewrite(e.t,{f:{}});if(!x)return '';return (e.h?e.h.replace(':','h')+' : ':'')+x}
+function tclParts(a){const A=a.A||{},O=a.O||{};const co=[...(a.C||[])];
+ if(O.svc==='stop'&&a.cible==='A'&&!co.includes('Service non assuré'))co.push('Conducteur relevé, service non assuré');
+ const me=[];['sp','samu','pn','pm','sia','ads','am','demin'].forEach(k=>{const x=A[k];if(!x||x.refus)return;me.push(ASHORT[k][x.st==='on'&&ASHORT[k][1]?1:0])});
+ if(O.hop)me.push('victime transportée à l\'hôpital'+(O.hopN?' '+cap(O.hopN):''));
+ if(O.aut==='interpellé')me.push('auteur interpellé');else if(O.aut==='fuite')me.push('auteur en fuite');
+ if(O.plainte==='oui')me.push('plainte prévue');if(O.video)me.push('retrait vidéo demandé');
+ return {co:co.join(', '),me:cap(me.join(', '))}}
+return {prep,clauses,place,comprendre,rewrite,mcRecit,suiteLine,tclParts,lieuPhrase,parseTimes,actors,outcome,conseq,origin,detectCtx}})();
+
+function tellHtml(id,small){return `<div class="tell"><label for="${id}">Raconte l'incident<small>Comme ça vient : quoi, où, quand, qui est sur place. Pour dicter, touche le micro 🎙 du clavier.</small></label><textarea class="f vtext" id="${id}" rows="${small?2:3}" placeholder="Ex. : le CR de la C3 m'appelle, il vient de se faire frapper par un voyageur à Bonnevay, l'auteur est parti vers la gare, j'envoie la SIA…">${esc(window._tellDraft||'')}</textarea><button class="btn big1" data-tellgo="${id}">Créer la fiche</button><div id="${id}-r"></div></div>`}
+function bindTell(id){const t=$('#'+id);if(!t)return;t.oninput=()=>{window._tellDraft=t.value};const b=view.querySelector(`[data-tellgo="${id}"]`);if(b)b.onclick=()=>tellGo(id)}
+function tellGo(id){const t=$('#'+id);const text=(t.value||'').trim();const res=$('#'+id+'-r');
+ if(text.length<6){toast('Raconte d\'abord ce qui se passe');t.focus();return}
+ const a=RC.comprendre(text);
+ if(a.id==null){res.innerHTML=`<div class="card" style="margin-top:10px"><b>Je n'ai pas reconnu le type de fait.</b><div class="sub">Choisis-le : ton récit et le lieu seront repris dans la fiche.</div><div class="btns"><button class="btn" id="ttree">Choisir le fait</button></div></div>`;
+  $('#ttree').onclick=()=>{window._tellPending={text,a};window._tellDraft='';go('isis',{p:[]})};return}
+ window._tellDraft='';createFromTell(text,a)}
+function createFromTell(text,a){const id=a.id;const row=ISIS[id];let cible=a.cible;if(cible&&!(row.m&&row.m[cible]))cible=null;
+ const now=new Date();const f=a.f;
+ const base={isis:id,cible:cible||(row.c==='A'?'A':row.c==='V'?'V':row.c==='-'?'-':'A/V'),
+  f:{date:f.dayBack?isoOf(new Date(now.getTime()-864e5)):todayIso(),heure:f.heure||hhmm(now),mode:f.mode||'',ligne:f.ligne||'',arret:f.arret||'',prec:f.prec||'',dir:f.dir||''},
+  recit:[{h:f.heure||hhmm(now),t:text}],tcl:{},mc:{},voice:{alt:a.alt}};
+ const c=ctxFrom(base);base.logi=c.logi;base.title=c.title;newInc(base);toast('Fiche créée : relis-la')}
+R.voice=function(){R.home();const t=$('#htell');if(t){t.focus();t.scrollIntoView({block:'center'})}};
 // ================= PC ÉVÉNEMENTIEL / PC CRISE
 const PC=D.pce;let pt=1;
 R.pce=function(){
