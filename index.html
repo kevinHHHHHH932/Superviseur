@@ -271,6 +271,7 @@ body.subpage header.top .brand{font-size:14px}
 .syncb.ok{color:var(--ok)}.syncb.err{color:var(--red);border-color:var(--red)}.syncb.busy svg{animation:spin 1s linear infinite}.syncb.off{color:var(--mute)}
 @keyframes spin{to{transform:rotate(360deg)}}
 @media(max-width:420px){.syncb span{display:none}}
+.vinfo{background:var(--soft);color:var(--ink);border:1px solid var(--acc);font-size:14.5px;line-height:1.45;padding:10px 12px;border-radius:12px;margin:0 0 8px}.vinfo small{display:block;color:var(--mute);margin-top:4px;font-size:12.5px}
 @media(min-width:900px){
   nav.bot{display:none}
   nav.side{display:flex;flex-direction:column;gap:4px;width:220px;flex:none;position:sticky;top:0;height:100vh;padding:18px 10px;border-right:1px solid var(--line);background:var(--card)}
@@ -794,22 +795,17 @@ let DICT=null,SAMPLE=null;
 // aucune capacité externe : dictée du système et analyse locale uniquement
 function micUi(on){const b=$('#vmic');if(!b)return;b.classList.toggle('on',!!on);const s=$('#vstate');if(s)s.textContent=on?'J\'écoute… touche pour arrêter':'Touche le micro et parle'}
 let SR=null,srOn=false;
-function micToggle(){
- const b=$('#vmic');if(!b)return;
- if(DICT){if(b.classList.contains('on')){DICT.stop().catch(()=>{});micUi(false)}else{DICT.start().catch(e=>{micUi(false);if(e&&/not_granted/.test(String(e.code||e.message||e)))voiceHint('Micro refusé : utilise le micro du clavier dans la zone de texte.');else voiceHint('Micro indisponible : utilise le micro du clavier.')});micUi(true)}return}
- const C=window.SpeechRecognition||window.webkitSpeechRecognition;
- if(C){if(srOn&&SR){SR.stop();return}
-  try{SR=new C();SR.lang='fr-FR';SR.continuous=true;SR.interimResults=true;
-   SR.onresult=ev=>{let fin='',part='';for(let i=ev.resultIndex;i<ev.results.length;i++){const r=ev.results[i];if(r.isFinal)fin+=r[0].transcript;else part+=r[0].transcript}
-    if(fin){const t=$('#vtext');t.value=(t.value.trim()?t.value.trim()+' ':'')+fin.trim();t.dispatchEvent(new Event('input'))}const p=$('#vpart');if(p)p.textContent=part};
-   SR.onerror=e=>{srOn=false;micUi(false);voiceHint('Micro indisponible ici : touche la zone de texte puis le micro du clavier.')};
-   SR.onend=()=>{srOn=false;micUi(false)};SR.start();srOn=true;micUi(true)}catch(e){voiceHint('Micro indisponible ici : touche la zone de texte puis le micro du clavier.')}
-  return}
- voiceHint('Sur ce téléphone, touche la zone de texte puis le micro 🎙 du clavier pour dicter.');const t=$('#vtext');if(t)t.focus()}
+function micToggle(){const t=$('#vtext');if(!t)return;
+ const ua=navigator.userAgent;const ios=/iPhone|iPad|iPod/.test(ua)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);const and=/Android/.test(ua);const win=/Win/.test(navigator.platform);const mac=/Mac/.test(navigator.platform)&&!ios;
+ t.focus();try{const n=t.value.length;t.setSelectionRange(n,n)}catch(e){}
+ const msg=ios?'Le clavier est ouvert : touche le micro 🎙 en bas à droite du clavier, parle, puis touche à nouveau le micro pour arrêter.<small>Pas de micro sur le clavier ? Réglages de l\'iPhone › Général › Clavier › Activer Dictée.</small>':and?'Touche le micro 🎙 du clavier et parle.':win?'Sur Windows : appuie sur <b>touche Windows + H</b> et parle.':mac?'Sur Mac : appuie deux fois sur la touche <b>Fn</b> (ou 🌐) et parle.':'Utilise la dictée de ton clavier.';
+ const h=$('#vhint');h.className='hint vinfo';h.innerHTML=msg;h.style.display='';
+ const b=$('#vmic');b.classList.add('on');clearTimeout(b._t);b._t=setTimeout(()=>b.classList.remove('on'),3000);
+ t.scrollIntoView({block:'center',behavior:'smooth'})}
 function voiceHint(m){const e=$('#vhint');if(e){e.textContent=m;e.style.display=''}}
 R.voice=function(){
  view.innerHTML=`<h1>Déclarer un incident</h1><div class="sub">Dis ce qui se passe : qui, quoi, où (ligne, arrêt), quand. La fiche se remplit toute seule, tu vérifies.</div>
- <div class="vbox"><button class="vmic" id="vmic" aria-label="Parler">${MIC}</button><div class="vstate" id="vstate">Touche le micro et parle</div></div>
+ <div class="vbox"><button class="vmic" id="vmic" aria-label="Parler">${MIC}</button><div class="vstate" id="vstate">Touche le micro puis dicte avec le clavier</div></div>
  <div class="hint warn" id="vhint" style="display:none"></div>
  <textarea class="f vtext" id="vtext" rows="4" placeholder="Ex. : un conducteur vient de se faire agresser physiquement par un voyageur sur la ligne C25, à l'arrêt Gare de Vénissieux, il y a 5 minutes."></textarea>
  <div class="vpart" id="vpart"></div>
