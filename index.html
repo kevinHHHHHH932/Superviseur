@@ -336,6 +336,7 @@ function show(msg){$('lock').classList.add('on');if(msg)$('lockmsg').textContent
 function ready(){$('lock').classList.remove('on');window.__svStart();setTimeout(warm,1500)}
 async function boot(){
  if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js').catch(()=>{})}
+ try{if(navigator.storage&&navigator.storage.persist)navigator.storage.persist().catch(()=>{})}catch(e){}
  if(!window.crypto||!crypto.subtle){show('Navigateur non compatible (connexion sécurisée HTTPS requise).');return}
  try{VAULT=await (await fetch('vault/vault.json',{cache:'no-cache'})).json()}catch(e){show('Pas de connexion et appli pas encore installée sur cet appareil.');return}
  const saved=(()=>{try{return localStorage.getItem(KEY)}catch(e){return null}})();
