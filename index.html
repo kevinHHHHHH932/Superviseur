@@ -121,6 +121,24 @@ nav svg{width:23px;height:23px}
 .foot{color:var(--mute);font-size:11px;text-align:center;margin:28px 0 8px}
 .confirm{background:var(--red)!important;color:#fff!important}
 .hhead{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin:2px 0 12px}
+.hub{position:relative;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;max-width:620px;margin:0 auto}
+.tile{border:1px solid var(--line);background:var(--card);border-radius:18px;padding:13px 14px;min-height:118px;display:flex;flex-direction:column;justify-content:space-between;gap:8px;cursor:pointer;color:var(--ink);text-align:left;box-shadow:var(--sh)}
+.tile.t1,.tile.t3{padding-right:52px}.tile.t2,.tile.t4{padding-left:52px;align-items:flex-end;text-align:right}
+.tile.t3,.tile.t4{flex-direction:column-reverse}
+.tile .ic2{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;background:var(--iconbg);flex:none}.tile .ic2 svg{width:24px;height:24px;color:var(--acc)}
+.tile .tx b{display:block;font-size:17px;line-height:1.2}.tile .tx small{display:block;color:var(--mute);font-size:12px;line-height:1.3;margin-top:2px}
+.tile.t1 .ic2 svg{color:var(--red)}.tile.t3 .ic2 svg{color:var(--navy)}body.dark .tile.t3 .ic2 svg{color:#9d97ff}
+.tile.t3.live{border-color:#9b8cf0;background:linear-gradient(160deg,rgba(155,140,240,.25),var(--card) 70%)}
+.hubc{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:104px;height:104px;border-radius:50%;border:6px solid var(--bg);background:var(--red);color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;box-shadow:0 6px 20px rgba(211,52,62,.38);z-index:2;padding:0}
+.hubc svg{width:34px;height:34px}.hubc span{font-weight:800;font-size:12.5px;letter-spacing:.2px}.hubc:active{transform:translate(-50%,-50%) scale(.95)}
+.hubl{text-align:center;color:var(--mute);font-size:12.5px;margin:10px 0 4px}.hubl b{color:var(--ink)}
+.tlbox textarea{min-height:190px;font-size:17px;line-height:1.45}
+.dict{display:flex;gap:10px;align-items:center;background:var(--soft);border:1px solid var(--line);border-radius:12px;padding:9px 12px;margin:8px 0;font-size:14px}.dict i{font-style:normal;font-size:20px}.dict small{display:block;color:var(--mute);font-size:12px}
+.tprev{margin:10px 0 4px;display:grid;gap:6px}.tprev:empty{display:none}
+.tprev .pr{display:flex;gap:10px;align-items:flex-start;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:9px 11px}.tprev .pr>i{font-style:normal;width:22px;flex:none;text-align:center}
+.tprev .pr b{display:block;font-size:14.5px}.tprev .pr em{color:var(--mute);font-style:normal}.tprev .pr .vrow{margin:6px 0 0}
+.tprev h4{margin:2px 2px 0;font-size:12px;text-transform:uppercase;letter-spacing:.6px;color:var(--mute)}
+.rowtell{display:flex;align-items:center;gap:12px;width:100%;margin-top:10px;border:1px solid var(--line);background:var(--card);border-radius:14px;padding:10px 12px;cursor:pointer;color:var(--ink);text-align:left;box-shadow:var(--sh)}.rowtell b{display:block;font-size:15px}.rowtell small{color:var(--mute);font-size:12.5px}.hubm{width:40px;height:40px;border-radius:50%;background:var(--red);display:grid;place-items:center;font-size:18px;flex:none}
 .big4{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
 .big{border:1px solid var(--line);background:var(--card);border-radius:18px;padding:16px 14px;min-height:150px;text-align:left;cursor:pointer;display:flex;flex-direction:column;gap:6px;color:var(--ink)}
 .big:active{transform:scale(.98)}
@@ -183,7 +201,7 @@ nav.side .brand{line-height:1.5}
 .mini{display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:11px 12px;cursor:pointer;text-align:left;box-shadow:var(--sh)}
 .mini b{font-size:14px;display:block}.mini small{font-size:12px;color:var(--mute)}
 .mini i{font-style:normal;font-family:var(--mono);font-weight:800;font-size:11px;color:var(--acc);background:var(--soft);border-radius:8px;padding:6px 7px;min-width:38px;text-align:center}
-.fhead{margin:10px 0 12px}.fhead h1{margin:2px 0 6px}.pills{display:flex;flex-wrap:wrap;gap:6px}
+.fhead{margin:6px 0 10px}.fhead h1{margin:2px 0 6px;font-size:21px;line-height:1.25}.mmsw{margin-top:8px}.pills{display:flex;flex-wrap:wrap;gap:6px}
 .fgrid{display:grid;gap:12px;grid-template-columns:minmax(0,1fr)}.fs{min-width:0}.fs select.f{text-overflow:ellipsis}
 .fs h3{display:flex;align-items:center;gap:10px;margin:0 0 10px;font-size:16px}
 .fs h3 span{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;background:var(--navy);color:#fff;font-size:13px;font-family:var(--mono);flex:none}
@@ -435,7 +453,7 @@ const ICONS={
  fiches:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 19V5"/></svg>',
  log:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>'};
 const TABS=[['home','Accueil'],['ann','Annuaire'],['fiches','Mémo'],['log','Journal']];
-const TABOF={settings:'fiches',voice:'home',memo:'fiches',home:'home',inc:'home',isis:'home',act:'home',pce:'home',msg:'home',ann:'ann',radio:'fiches',fiches:'fiches',refl:'fiches',book:'fiches',codes:'fiches',gloss:'fiches',log:'log',check:'log'};
+const TABOF={settings:'fiches',tell:'home',voice:'home',memo:'fiches',home:'home',inc:'home',isis:'home',act:'home',pce:'home',msg:'home',ann:'ann',radio:'fiches',fiches:'fiches',refl:'fiches',book:'fiches',codes:'fiches',gloss:'fiches',log:'log',check:'log'};
 function navHtml(){return TABS.map(([k,l])=>`<button data-t="${k}">${ICONS[k]}<span>${l}</span></button>`).join('')}
 function goTab(t){go(t,undefined,{reset:1})}
 $('#bot').innerHTML=navHtml();
@@ -496,13 +514,14 @@ R.home=function(){
  const where=o=>{const f=o.f||{};return [ligneStr(f),f.arret].filter(Boolean).join(' · ')};
  view.innerHTML=`
  <div class="hhead"><div><div class="sub">${esc(date.charAt(0).toUpperCase()+date.slice(1))}</div><b style="font-size:18px">Bonjour${lget('name','')?' '+esc(lget('name','')):''}</b></div><div class="clock" id="clk">${hhmm(d)}</div></div>
- ${tellHtml('htell')}
- <div class="big4">
-  <button class="big b1" onclick="_go('isis',{p:[]})">${I('<path d="M12 3 2 20h20z"/><path d="M12 10v4M12 17v.5"/>')}<b>Ouvrir un incident</b><span>Familles ISIS → lieu → marche à suivre, main courante, TCL</span></button>
-  <button class="big b2" onclick="_go('ann')">${I('<path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a1 1 0 0 1-1 1A16 16 0 0 1 4 5a1 1 0 0 1 1-1"/>')}<b>Annuaire</b><span>Interne · externe</span></button>
-  <button class="big b3 ${pon?'live':''}" onclick="_go('pce')">${I('<rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/>')}<b>${pon?esc(pce.label):'PC Événementiel / Crise'}</b><span>${pon?'En cours depuis <span data-since="'+pce.start+'">'+since(pce.start)+'</span>':'Ouvrir · Teams · clôturer'}</span></button>
-  <button class="big b4" onclick="_go('memo')">${I('<path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 19V5"/>')}<b>Mémo</b><span>Réflexes · radio · codes MC · classeur</span></button>
+ <div class="hub">
+  <button class="tile t1" onclick="_go('isis',{p:[]})">${I('<path d="M12 3 2 20h20z"/><path d="M12 10v4M12 17v.5"/>')}<span class="tx"><b>Incident</b><small>par famille ISIS</small></span></button>
+  <button class="tile t2" onclick="_go('ann')">${I('<path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a1 1 0 0 1-1 1A16 16 0 0 1 4 5a1 1 0 0 1 1-1"/>')}<span class="tx"><b>Annuaire</b><small>interne · externe</small></span></button>
+  <button class="tile t3 ${pon?'live':''}" onclick="_go('pce')">${I('<rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/>')}<span class="tx"><b>${pon?'PC en cours':'PC Crise'}</b><small>${pon?'depuis <span data-since="'+pce.start+'">'+since(pce.start)+'</span>':'événementiel · crise'}</small></span></button>
+  <button class="tile t4" onclick="_go('memo')">${I('<path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 19V5"/>')}<span class="tx"><b>Mémo</b><small>réflexes · radio · codes</small></span></button>
+  <button class="hubc" id="hubtell" aria-label="Raconter un incident"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg><span>Raconter</span></button>
  </div>
+ <div class="hubl">Touche <b>Raconter</b> et décris l'incident comme il vient : la fiche se remplit.</div>
  ${open.length?`<h2>Incidents en cours · ${open.length}</h2><div class="incs">${open.map(o=>`<div class="inccard"><div class="it"><span class="dot"></span><div><b>${esc(o.title)}</b><small>${esc(where(o)||'lieu à préciser')} · ${esc((o.f&&o.f.heure)||o.h)}</small></div></div>
   <div class="ia"><button class="bgo" data-cont="${esc(o.id)}"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg>Continuer</button><button class="bstop" data-stop="${esc(o.id)}"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M5 12l4 4 10-10"/></svg>Clôturer</button></div></div>`).join('')}</div>`:''}
  <h2>Compléments</h2>
@@ -515,7 +534,7 @@ R.home=function(){
  ${recent.length?`<h2>Clos récemment</h2><div class="list">${recent.map(o=>`<div class="row" onclick="_go('inc',{id:'${esc(o.id)}'})"><div class="t"><b>${esc(o.title)}</b><small>${esc(where(o)||'—')} · clos à ${esc(o.endH||'')}</small></div><span style="color:var(--mute)">›</span></div>`).join('')}</div>`:''}
  <div class="discreet"><button onclick="_go('check')">Rappel : journaux PCS ${todayInfo().join(' + ').toLowerCase()} entre 05:00 et 06:00 ›</button></div>
  <div class="foot">Aide-mémoire tiré du classeur v1.7 — la référence reste le Référentiel unique. Diffusion restreinte.</div>`;
- bindTell('htell');window._tellPending=null;window._refait=null;
+ window._tellPending=null;window._refait=null;$('#hubtell').onclick=()=>go('tell');
  view.querySelectorAll('[data-cont]').forEach(b=>b.onclick=()=>go('inc',{id:b.dataset.cont}));
  view.querySelectorAll('[data-stop]').forEach(b=>b.onclick=()=>closeInc(b.dataset.stop));
 };
@@ -562,7 +581,7 @@ R.isis=function(arg){
  let body='';
  if(lvl===0){
   const fb=([f,c])=>{const rs=rowsAt([f]);const mt=maxTcl(rs.map(([r])=>r));return `<button class="bb fam2" style="--c:${c}" data-f="${esc(f)}">${svgI(FICON[f])}<b>${esc(f)}</b><span>${rs.length} faits${mt?' · jusqu\'à '+mt:''}</span></button>`};
-  body=`<h1>${window._refait?'Changer de fait':window._tellPending?'Quel type de fait ?':'Ouvrir un incident'}</h1>${window._refait||window._tellPending?'<div class="sub">Choisis le fait : le récit et le lieu sont conservés.</div>':`<div style="margin-top:10px">${tellHtml('itell',1)}</div><div class="sub">ou choisis la famille ISIS :</div>`}
+  body=`<h1>${window._refait?'Changer de fait':window._tellPending?'Quel type de fait ?':'Ouvrir un incident'}</h1>${window._refait||window._tellPending?'<div class="sub">Choisis le fait : le récit et le lieu sont conservés.</div>':`<button class="rowtell" onclick="_go('tell')"><span class="hubm">🎙</span><span><b>Plutôt raconter l'incident</b><small>la fiche se remplit à partir de ton récit</small></span><span style="margin-left:auto;color:var(--mute)">›</span></button><div class="sub" style="margin-top:10px">Ou choisis la famille ISIS :</div>`}
   <div id="ifam"><div class="bgrid two" style="margin-top:12px">${FAMS.slice(0,4).map(fb).join('')}</div>
   <div class="bgrid one" style="margin-top:10px">${fb(FAMS[4]).replace('class="bb fam2"','class="bb fam2 wide"')}</div>
   <div class="bgrid two" style="margin-top:10px">
@@ -725,18 +744,19 @@ function tclHtml2(o,c){const t=o.tcl||{};if(!tclLv(c)&&c.row&&!t.force&&!t.lv)re
  const lv=t.lv||tclLv(c)||'TCL1';const T=S.tcl[lv];const f=o.f||{};
  let dl='';if(f.heure){const [h,m]=f.heure.split(':').map(Number);const b=new Date();b.setHours(h,m,0,0);const add=n=>hhmm(new Date(b.getTime()+n*60000));if(T.sms)dl+=`SMS avant <b>${add(T.sms)}</b>`;if(T.mail)dl+=` · mail avant <b>${add(T.mail)}</b>`}
  return `${!tclLv(c)&&c.row?'<div class="hint warn">Classification : pas de message TCL prévu pour ce fait. À envoyer seulement en cas d\'aggravation.</div>':''}
- <div class="seg" style="margin:4px 0 8px">${Object.keys(S.tcl).map(k=>`<button class="${k===lv?'on':''}" data-lv="${k}">${k}</button>`).join('')}</div>
- ${lv==='TCL2'||lv==='TCL3'||lv==='RDL'?`<div class="hint warn" style="margin:0 0 8px">⚠ ${lv} : à rédiger <b>seulement sur instruction de l'astreinte CODIR</b> (fiche 4.1). Niveau proposé, décision CODIR.</div>`:''}
- ${c.cible==='A'&&/TCL3/.test(c.row?c.row.tcl:'')?`<div class="hint" style="margin:0 0 8px"><b>Si</b> l'agent est transporté à l'hôpital : message <b>RDL</b>, toujours doublé d'un <b>TCL3</b> (fiche 4.2).</div>`:''}
- <div class="sub">${esc(T.types)} · <b>${esc(T.val)}</b>${dl?' · '+dl:''}</div>
-  <label class="l">Incident (description courte)</label><input class="f" data-t="in" value="${esc(t.in!=null?t.in:'')}" placeholder="${esc(incLabel(c))}">
- <label class="l">Conséquences</label><input class="f" data-t="co" value="${esc(t.co!=null?t.co:tclAuto(o).co)}" placeholder="Ligne interrompue, retards, véhicule retiré…">
- <label class="l">Mesures</label><input class="f" data-t="me" value="${esc(t.me!=null?t.me:tclAuto(o).me)}" placeholder="SP sur place, SIA missionnée, FDO avisées…">
- <label class="l">Message prêt à copier ${t.man?'<span class="pill">modifié à la main</span>':''}</label>
- <textarea class="f out2" id="tctxt" rows="4">${esc(t.man?t.txt:tclCompose(o,c))}</textarea>
+ ${lv==='TCL2'||lv==='TCL3'||lv==='RDL'?`<div class="hint warn" style="margin:0 0 8px">⚠ <b>${lv}</b> : seulement sur instruction de l'astreinte CODIR (fiche 4.1).</div>`:''}
+ ${c.cible==='A'&&/TCL3/.test(c.row?c.row.tcl:'')?`<div class="hint" style="margin:0 0 8px">Agent transporté à l'hôpital : <b>RDL</b> + <b>TCL3</b> (fiche 4.2).</div>`:''}
+ <div class="sub"><span class="pill">${lv}</span> ${esc(T.val)}${dl?' · '+dl:''}</div>
+ <textarea class="f out2" id="tctxt" rows="4" style="margin-top:8px">${esc(t.man?t.txt:tclCompose(o,c))}</textarea>
  <div class="btns"><button class="btn" id="tccp">Copier</button>${t.man?'<button class="btn ghost" id="tcre">Régénérer</button>':''}</div>
+ <details id="tcadj" ${tAdj?'open':''}><summary>Ajuster : niveau, incident, conséquences, mesures</summary>
+ <div class="seg" style="margin:8px 0">${Object.keys(S.tcl).map(k=>`<button class="${k===lv?'on':''}" data-lv="${k}">${k}</button>`).join('')}</div>
+ <div class="sub" style="margin-bottom:4px">${esc(T.types)}</div>
+ <label class="l">Incident (description courte)</label><input class="f" data-t="in" value="${esc(t.in!=null?t.in:'')}" placeholder="${esc(incLabel(c))}">
+ <label class="l">Conséquences</label><input class="f" data-t="co" value="${esc(t.co!=null?t.co:tclAuto(o).co)}" placeholder="Ligne interrompue, retards, véhicule retiré…">
+ <label class="l">Mesures</label><input class="f" data-t="me" value="${esc(t.me!=null?t.me:tclAuto(o).me)}" placeholder="SP sur place, SIA missionnée, FDO avisées…"></details>
  <details><summary>Qui prévenir avant l'envoi</summary><ol>${S.tclPrevenir.map(x=>`<li>${esc(x)}</li>`).join('')}</ol></details>`}
-let fEdit=false;
+let fEdit=false,tAdj=false;
 function isoOf(d){return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())}
 function recitAll(o){return (o.recit||[]).map(e=>e.t.replace(/[.\s]+$/,'')).join('. ')}
 function anaFirst(o){const r=o.recit||[];return r.length?RC.comprendre(r[0].t,new Date(o.start||Date.now())):null}
@@ -758,15 +778,15 @@ function recitHtml(o){const R=o.recit||[];
  <textarea class="f vtext" id="rnew" rows="2" placeholder="${R.length?'La suite : ce qui se passe ensuite (pompiers arrivés, auteur interpellé, reprise…)':'Raconte ce qui se passe : la fiche se complète toute seule'}"></textarea>
  <div class="btns"><button class="btn" id="radd">${R.length?'Ajouter la suite':'Compléter la fiche'}</button></div>`}
 function mcCard(o,c){const hasR=(o.recit||[]).length>0;const mode=hasR?(o.mcMode||'r'):'t';
- const seg=hasR?`<div class="seg" style="margin:0 0 8px"><button data-mm="r" class="${mode==='r'?'on':''}">D'après le récit</button><button data-mm="t" class="${mode==='t'?'on':''}">Modèle du classeur</button></div>`:'';
- if(mode==='t')return seg+mcHtml(o,c);
+ const seg=hasR?`<div class="mmsw">${mode==='r'?`<button class="lnk" data-mm="t">Utiliser plutôt le modèle du classeur ›</button>`:`<button class="lnk" data-mm="r">‹ Revenir au texte rédigé d'après le récit</button>`}</div>`:'';
+ if(mode==='t')return mcHtml(o,c)+seg;
  const man=o.mc&&o.mc.rman;
- return seg+`<textarea class="f out2" id="mctxt" rows="7">${esc(man?o.mc.rtxt:mcAuto(o))}</textarea>
+ return `<textarea class="f out2" id="mctxt" rows="7">${esc(man?o.mc.rtxt:mcAuto(o))}</textarea>
  <div class="btns"><button class="btn" id="mccp">Copier</button>${man?'<button class="btn ghost" id="mcre">Régénérer</button>':''}</div>
- <div class="sub">Rédigé d'après ton récit (trame des fiches 3.1–3.2). Relis et corrige avant de copier.</div>`}
+ <div class="sub">Rédigé d'après ton récit. Relis avant de copier.</div>`+seg}
 function renderFiche(o){
  const c=ctxFrom(o);const r=c.row;const closed=o.status!=='open';o.f=o.f||{};
- view.innerHTML=` <div class="fhead"><div class="sub">${r?esc(r.f1)+' › '+esc([r.f2,r.f3].filter(Boolean).join(' › ')):'Incident'}</div><h1>${esc(o.title)}</h1>
+ view.innerHTML=` <div class="fhead"><div class="sub">${r?esc(r.f1):'Incident'}</div><h1>${esc(o.title)}</h1>
   <div class="pills">${r?tclPill(r.tcl):''}${r&&r.j==='Oui'?'<span class="pill">JOURNAL PCS</span>':''}${closed?`<span class="pill" style="background:var(--ok);color:#fff">CLOS ${esc(o.endH||'')}</span>`:''}</div></div>
  ${factBar(o,c)}
  <div class="fgrid">
@@ -824,6 +844,7 @@ function bindFiche(id,c){
  // TCL
  function bindTcl2(){
   const tf=$('#tcforce');if(tf){tf.onclick=()=>{Z.tcl=Z.tcl||{};Z.tcl.force=true;flush();$('#ftcl').innerHTML=tclHtml2(Z,c);bindTcl2()};return}
+  const ta=$('#tcadj');if(ta)ta.addEventListener('toggle',()=>{tAdj=ta.open});
   view.querySelectorAll('[data-lv]').forEach(b=>b.onclick=()=>{Z.tcl=Z.tcl||{};Z.tcl.lv=b.dataset.lv;flush();$('#ftcl').innerHTML=tclHtml2(Z,c);bindTcl2()});
   view.querySelectorAll('[data-t]').forEach(e=>e.oninput=()=>{Z.tcl=Z.tcl||{};Z.tcl[e.dataset.t]=e.value;save(Z);upOut()});
   const tt=$('#tctxt');tt.oninput=()=>{Z.tcl=Z.tcl||{};Z.tcl.man=true;Z.tcl.txt=tt.value;save(Z)};
@@ -850,7 +871,7 @@ function addRecit(z,t){const now=new Date();z.recit=z.recit||[];const first=!z.r
  if(a.id!=null&&a.id!==z.isis){if(z.isis==null||first&&!z.isisManual){}z.sugg=a.id}else delete z.sugg;
  if(a.cible&&(z.cible==='A/V'||!z.cible)&&ISIS[z.isis]&&ISIS[z.isis].m&&ISIS[z.isis].m[a.cible]){z.cible=a.cible;const c=ctxFrom(z);z.logi=c.logi}}
 function newInc(base){const tp=window._tellPending;if(tp&&!base.recit){window._tellPending=null;const f=tp.a.f;base.recit=[{h:f.heure||hhmm(new Date()),t:tp.text}];base.f={date:f.dayBack?isoOf(new Date(Date.now()-864e5)):todayIso(),heure:f.heure||hhmm(new Date()),mode:f.mode||'',ligne:f.ligne||'',arret:f.arret||'',prec:f.prec||'',dir:f.dir||''};base.voice={alt:[]}}
- const n=new Date();const o=Object.assign({id:n.getTime().toString(36)+Math.random().toString(36).slice(2,6),start:n.toISOString(),h:hhmm(n),status:'open',f:{date:todayIso(),heure:hhmm(n)},mc:{},tcl:{}},base);saveInc(o);go('inc',{id:o.id},tp&&o.recit?{reset:1}:{});return o}
+ const n=new Date();const o=Object.assign({id:n.getTime().toString(36)+Math.random().toString(36).slice(2,6),start:n.toISOString(),h:hhmm(n),status:'open',f:{date:todayIso(),heure:hhmm(n)},mc:{},tcl:{}},base);saveInc(o);go('inc',{id:o.id},o.recit?{reset:1}:{});return o}
 function openCase(x){const rf=window._refait;if(rf){window._refait=null;const z=getInc(rf);if(z){setFait(z,x.r,x.cible);saveInc(z);let k=-1;navStack.forEach((e,i)=>{if(e.t==='inc'&&e.a&&e.a.id===rf)k=i});navStack=k>=0?navStack.slice(0,k):[];go('inc',{id:rf},{noPush:1});toast('Fait modifié');return}}
  const c=ctxFrom(x);const b={isis:x.r,cible:x.cible,logi:c.logi,title:c.title,isisManual:true};newInc(b)}
 R.act=function(arg){openCase(arg)};
@@ -874,8 +895,10 @@ function fuzzyRe(name){return new RegExp(B+name.toLowerCase().normalize('NFD').r
 
 // ---------- 1. nettoyage de la dictée
 function prep(raw){let t=' '+String(raw||'').replace(/[’ʼ]/g,"'").replace(/\s+/g,' ')+' ';
+ t=t.replace(/(?<![a-zà-ÿ])(à|au|à la|sur la|sur le|ligne|vers)\s+[^,.;]{2,40}?\s*,?\s*(?:euh+\s*,?\s*)?(?:non|enfin|pardon|plutôt|je veux dire)(?:\s*,?\s*(?:pardon|non|euh+))?\s*,?\s+(?=(?:à|au|à la|sur la|sur le|ligne|vers)\s)/gi,' ');
  t=t.replace(/(?<![a-zà-ÿ])(euh+|heu+|bah|ben|hum)(?![a-zà-ÿ])[,]?/gi,' ');
- t=t.replace(/(?<![a-zà-ÿ])(d|l|j|n|s|c|qu) (?=[aeiouyhéèêàâîôû])/gi,"$1'");
+ t=t.replace(/(?<![a-zà-ÿ])(du coup|en fait|genre|tu vois|quoi)(?![a-zà-ÿ])\s*,?/gi,' ');
+ t=t.replace(/(?<![a-zà-ÿA-Z])(d|l|j|n|s|c|qu) (?=[aeiouyhéèêàâîôû])/g,"$1'");
  const AB={voy:'voyageur',voys:'voyageurs',ds:'dans',pdt:'pendant',tjrs:'toujours',tjs:'toujours',qq:'quelqu\'un',qqn:'quelqu\'un',bcp:'beaucoup',mvt:'mouvement',stp:'',svp:'',ss:'sous',av:'avenue',agt:'agent',agts:'agents',ctrl:'contrôle',ctrlr:'contrôleur',interp:'interpellé',vict:'victime',dmd:'demande',dde:'demande'};
  t=t.replace(/(?<![a-zà-ÿ])(voys?|ds|pdt|tjrs|tjs|qqn?|bcp|mvt|agts?|ctrlr?|interp|vict|dmd|dde)(?![a-zà-ÿ])/gi,m=>AB[m.toLowerCase()]);
  // lignes dictées : « c 25 », « t trois », « tram 3 », « ligne t 3 », « f un »
@@ -936,12 +959,14 @@ function place(t,now){const f={mode:null,ligne:null,arret:null,prec:null,dir:nul
  const lo=f.ligne&&lineObj(f.mode,f.ligne);
  const nNoDir=f.dir?n.replace(norm(f.dir),' '):n;
  let pool=lo&&lo.stops?lo.stops:ALLSTOPS;
- let hits=stopsIn(nNoDir,pool);let exactHit=hits.length>0;
+ let hits=stopsIn(nNoDir,pool);if(!hits.length){pool.forEach(s=>{const w=norm(s).split(/\s+/);for(let k=Math.min(3,w.length-1);k>=2;k--){const p=w.slice(0,k).join(' ');if(p.length>=9&&nNoDir.includes(' '+p+' ')){hits.push(s);break}}});hits=[...new Set(hits)]}let exactHit=hits.length>0;
  if(!hits.length&&lo&&lo.stops){const h2=stopsIn(nNoDir,ALLSTOPS);if(h2.length)hits=h2}
  const SW=/^(gare|place|hotel|ville|centre|lycee|mairie|saint|sainte|pont|parc|porte|route|quai|rue|universite|college|avenue|grand|petite|charles|jean|marcel|louis|vaulx|velin|decines|meyzieu|venissieux|villeurbanne|priest|fons|oullins|lyon)$/;
- if(!hits.length){pool.forEach(s=>{const w=norm(s).split(/[\s\-]+/).filter(x=>x.length>3&&!SW.test(x));if(w.length&&w.every(x=>new RegExp(B+x+E).test(nNoDir)))hits.push(s)})}
+ if(!hits.length){const cnt=x=>ALLSTOPS.filter(st=>norm(st).split(/[\s\-']+/).includes(x)).length;pool.forEach(s=>{const w=norm(s).split(/[\s\-]+/).filter(x=>x.length>3&&!SW.test(x));if(w.length&&w.every(x=>new RegExp(B+x+E).test(nNoDir))&&!(w.length===1&&cnt(w[0])>1))hits.push(s)})}
  if(!hits.length){const sc=pool.map(s=>{const w=norm(s).split(/[\s\-']+/).filter(x=>x.length>=4&&!SW.test(x));return [s,w.filter(x=>new RegExp(B+x+E).test(nNoDir)).length]}).filter(x=>x[1]>0).sort((a,b)=>b[1]-a[1]);
+  const top=sc.filter(x=>sc.length&&x[1]===sc[0][1]).map(x=>x[0]);const inM=s=>NET.lines.metro.some(l=>l.stops.includes(s));
   if(sc.length&&(sc.length===1||sc[0][1]>sc[1][1])&&(lo&&lo.stops||sc[0][1]>=2))hits=[sc[0][0]]
+  else if(top.length>1&&/m[ée]tro|station/i.test(t)&&top.filter(inM).length===1)hits=top.filter(inM)
   else if(!lo||!lo.stops){const tok={};ALLSTOPS.forEach(st=>norm(st).split(/[\s\-']+/).filter(x=>x.length>=6&&!SW.test(x)).forEach(x=>{(tok[x]=tok[x]||new Set()).add(st)}));const one=Object.keys(tok).filter(x=>tok[x].size===1&&new RegExp(B+x+E).test(nNoDir));if(one.length===1)hits=[[...tok[one[0]]][0]]}}
  if(hits.length){// premier cité dans le texte
   hits.sort((a,b)=>nNoDir.indexOf(norm(a).split(' ')[0])-nNoDir.indexOf(norm(b).split(' ')[0]));const best=hits[0];
@@ -951,7 +976,7 @@ function place(t,now){const f={mode:null,ligne:null,arret:null,prec:null,dir:nul
   else if(!f.mode){const L=[].concat(...['metro','tram','funi','navi'].map(md=>NET.lines[md].filter(l=>l.stops.includes(best)).map(l=>[md,l])));
    const pref=/m[ée]tro|station|quai/i.test(t)?L.filter(x=>x[0]==='metro'):/tram|rame/i.test(t)?L.filter(x=>x[0]==='tram'):[];
    const pick=pref.length===1?pref[0]:L.length===1?L[0]:null;
-   if(pick){f.mode=pick[0];f.ligne=pick[1].id;f.arret=best}else if(pref.length>1&&pref.every(x=>x[0]===pref[0][0])){f.mode=pref[0][0];f.arret=best}else{f.mode='autre';f.prec=best}}
+   if(pick){f.mode=pick[0];f.ligne=pick[1].id;f.arret=best}else if(pref.length>1&&pref.every(x=>x[0]===pref[0][0])){f.mode=pref[0][0];f.arret=best}else if(L.length>1&&L.every(x=>x[0]===L[0][0])){f.mode=L[0][0];f.arret=best}else{f.mode='autre';f.prec=best}}
   else if(f.mode==='ut'){}}
  if(!f.arret&&!f.prec&&(m=t.match(/(?:à l'arr[êe]t|l'arr[êe]t|arr[êe]t|à la station|station|à hauteur d[eu]|au niveau d[eu]|devant|au terminus d[eu]|au terminus|au carrefour d[eu])\s+(?:de |du |d')?([^,.;]{3,50}?)(?=[,.;]|\s+(?:et|il|elle|ils|vers|avec|puis|où|quand|sur|par|direction|en direction|il y a)\s|$)/i))){
   let a=m[1].replace(/\s+\d{2}h\d{2}.*$/,'').replace(/^(la|le|les|l')\s+/i,'').trim();if(/^(suivant|précédent|d'après|d'avant|prochain|d'en face|du bus|du tram)/i.test(a))a='';
@@ -959,7 +984,7 @@ function place(t,now){const f={mode:null,ligne:null,arret:null,prec:null,dir:nul
   if(st.length&&(!f.ligne||!lo)){const L=[].concat(...['metro','tram','funi','navi'].map(md=>[].concat(...NET.lines[md].map(l=>st.filter(x=>l.stops.includes(x)).map(x=>[md,l,x])))));const pref=/m[ée]tro|station/i.test(t)?L.filter(x=>x[0]==='metro'):f.mode?L.filter(x=>x[0]===f.mode):L;const names=[...new Set(pref.map(x=>x[2]))];if(pref.length&&names.length===1&&(!f.mode||f.mode==='autre'||f.mode===pref[0][0])){f.mode=pref[0][0];if(pref.length===1)f.ligne=pref[0][1].id;f.arret=names[0];a=''}}
   if(a&&/^(?:[A-Z]{1,3}\d{1,3}|T\d{1,2}|\d{1,3})$/.test(a))a='';
   if(a&&!/^(de bus|du bus|de tram|du tram|du m[ée]tro|de la ligne)$/i.test(a)){if(f.mode==='bus'||f.mode==='tram'||f.mode==='metro'||f.mode==='funi')f.arret=a.charAt(0).toUpperCase()+a.slice(1);else{f.mode=f.mode||'autre';f.prec=a}}}
- if(!f.arret&&!f.prec&&(!f.mode||f.mode==='bus'||f.mode==='autre')&&(m=t.match(/(?:^|\s)(?:à|au|aux|vers|devant|près de|sur la place|place)\s+((?:La |Le |Les |L')?[A-ZÉÈÂ][a-zà-ÿ'’\-]+(?:[\s\-]+(?:de |du |des |d'|la |le |sur |en |aux )*[A-ZÉÈÂ0-9][a-zà-ÿ'’\-]*)*)/))){const a=m[1].trim();if(!/^(?:[A-Z]{1,3}\d{1,3}|T\d{1,2}|SIA|PC|ADS|AL|CR|SP|SAMU|Police|Lyon)$/.test(a)&&a.length>2){if(f.mode==='bus')f.arret=a;else{f.mode=f.mode||'autre';f.prec=a}}}
+ if(!f.arret&&!f.prec&&(!f.mode||f.mode==='bus'||f.mode==='autre')&&(m=t.match(/(?:^|\s)(?:à|au|aux|vers|devant|près de|sur la place|place)\s+((?:La |Le |Les |L')?[A-ZÉÈÂ][a-zà-ÿ'’]+(?:-[A-ZÉÈÂa-zà-ÿ]+)*(?:\s+(?:de |du |des |d'|la |le |sur |en |aux )*[A-ZÉÈÂ0-9][a-zà-ÿ'’]*(?:-[A-ZÉÈÂa-zà-ÿ]+)*)*)/))){const a=m[1].trim();if(!/^(?:[A-Z]{1,3}\d{1,3}|T\d{1,2}|SIA|PC|ADS|AL|CR|SP|SAMU|Police|Lyon)$/.test(a)&&a.length>2){if(f.mode==='bus')f.arret=a;else{f.mode=f.mode||'autre';f.prec=a}}}
  // précision
  const pr=[];
  if(/sur le quai|à quai|(?<![a-zà-ÿ])quai(?![a-zà-ÿ])/i.test(t)&&f.mode!=='bus')pr.push('sur le quai');
@@ -1000,7 +1025,7 @@ function faitScore(t,ctx){// t = texte normalisé sans les noms d'arrêts
  // atteintes sexuelles
  add(W("viol|violée|violer|tentative de viol"),agent?P(/Viols ou tentatives de viol sur agents/):P(/Viols ou tentatives de viol sur voyageurs/),100);
  add(R("attouch|frott|touch[a-zà-ÿ]* (les |aux |ses |la |sa |le )?(fesses|seins|poitrine|cuisses?|parties)|main aux fesses|main sur (les|ses) (fesses|cuisses)|tripot|pelot|agression sexuelle"),P(/Frotteurs/),95);
- add(R("exhib|se masturb|montre (son sexe|ses parties)|parties génitales|sexe à l'air|harc[eè]lement sexuel|harc[eè]le sexuellement"),P(/Exhibitionnistes/),90);
+ add(R("exhib(?![a-zà-ÿ]*\\s+(?:un |une |son |sa |des )?(?:couteau|arme|pistolet|cutter|lame|flingue|revolver|machette|matraque|batte))|se masturb|montre (son sexe|ses parties)|parties génitales|sexe à l'air|harc[eè]lement sexuel|harc[eè]le sexuellement"),P(/Exhibitionnistes/),90);
  add(R("harc[eè]l[a-zà-ÿ]*")&&!/mendi/.test(t)?R("harc[eè]l[a-zà-ÿ]*"):/^$/,P(/Exhibitionnistes/),60);
  add(R("outrage sexiste|outrages sexistes|propos sexistes|remarques? sexistes|commentaires? sexistes|sexiste|siffl[a-zà-ÿ]*|drague lourde|dragu[a-zà-ÿ]* (de manière|lourdement)"),P(/Outrages sexistes/),80);
  add(R("film[a-zà-ÿ]* (sous|la jupe|une femme|une voyageuse|une fille)|sous (sa |la )jupe|upskirt|photos? (sous|de sa)|prend des photos d'une"),P(/Prise de vidéos/),92);
@@ -1045,7 +1070,7 @@ function faitScore(t,ctx){// t = texte normalisé sans les noms d'arrêts
  // personnes
  add(R("malaise|inconscient|[ée]vanoui|perdu connaissance|perte de connaissance|ne r[ée]pond plus|convuls|crise d'[ée]pilepsie|ne bouge plus|allong[ée] (au sol|par terre)|au sol(?! (glissant|mouillé))|se sent mal|sent pas bien|douleur (à la |à la )?poitrine|arr[êe]t cardiaque|hypoglyc|diab[ée]tique|fait un (malaise|af)"),()=>sp?P(/Malaise.*avec intervention/):P(/Malaise.*sans intervention/),68);
  add(R("chute|tomb[ée]|chut[ée]|gliss[ée]|trébuch|s'est blessé|se blesse|coinc[ée] (dans|par|entre) (les |la )?portes?|pris (le pied|la main|le bras) dans|mal (à la|au|aux) (cheville|genou|jambe|bras|tête|dos|poignet|hanche|main|pied)|se plaint de douleurs?|douleurs? (au|à la|aux)"),()=>sp?P(/Malaise.*avec intervention/):P(/Malaise.*sans intervention/),67);
- add(R("enfant[^.,;]{0,25}(seul|perdu|trouvé|sans (ses )?parents)|(a|ont) perdu (sa|son|ses) (maman|mère|papa|père|parents|famille)|ne retrouve (plus )?(sa|son|ses) (maman|mère|papa|père|parents)|perdu(?! connaissance)(?! son| sa| ses| un| une)|perdue(?! connaissance)|[ée]gar[ée]|d[ée]sorient[ée]|enfant (seul|perdu|tout seul|sans ses parents|trouvé)|fugu|alzheimer|ne sait (plus )?(où|qui)|personne vulnérable|maraude|samu social"),P(/Assistance à des tiers/),69);
+ add(R("enfant[^.,;]{0,25}(seul|perdu|trouvé|sans (ses )?parents)|perdu (son|sa) (fils|fille|enfant|petit|petite|gamin|gamine|bébé)|(fils|fille|enfant|gamin) [^.,;]{0,15}(perdu|égaré|disparu|resté (tout )?seul|resté dans)|(a|ont) perdu (sa|son|ses) (maman|mère|papa|père|parents|famille)|ne retrouve (plus )?(sa|son|ses) (maman|mère|papa|père|parents)|perdu(?! connaissance)(?! son| sa| ses| un| une)|perdue(?! connaissance)|[ée]gar[ée]|d[ée]sorient[ée]|enfant (seul|perdu|tout seul|sans ses parents|trouvé)|fugu|alzheimer|ne sait (plus )?(où|qui)|personne vulnérable|maraude|samu social"),P(/Assistance à des tiers/),69);
  add(R("ivre|(?<![a-z])ipm(?![a-z])|alcoolis|ivresse|bourr[ée]|saoul|soûl|alcool(?! interdit)|a trop bu|bouteille (d'alcool|de vodka|de bière)"),P(/Ivresse/),57);
  add(R("mendi|fait la manche|demande de l'argent|r[ée]clame de l'argent"),P(/Mendicité/),59);
  add(R("squat|sdf|sans[- ]abri|sans domicile|dort (dans|sur)|dorment|campement|matelas|install[ée]s? (dans|sur) (le|la|les)|pickpocket"),()=>/pickpocket/.test(t)&&ctx.vol?-1:P(/Squats/),55);
@@ -1094,7 +1119,7 @@ const ACTOR=[
  ['pcbus','le PC Bus',/pc[ -]?bus/i],['pctram','le PC Tram',/pc[ -]?tram/i],['pcmetro','le PC Métro',/pc[ -]?m[ée]tro|pcc/i],
  ['codir','l\'astreinte CODIR',/codir|astreinte direction|cadre d'astreinte/i],['ds','le Directeur Sûreté',/directeur (de la )?sûreté/i],
  ['demin','le service de déminage',/d[ée]minage|d[ée]mineurs?/i]];
-const ST_ON=/emmen[a-zà-ÿ]*|est passée?|sont passés|sont venus|est venue?|avec les pompiers|partie? avec|l'ont pris|sur place|arriv[a-zà-ÿ]*|présents?|interv[a-zà-ÿ]*|prenn[a-zà-ÿ]* en charge|prise? en charge|prend en charge|s'occupe|s'occupent|est là|sont là|engag[a-zà-ÿ]* sur|interpell[a-zà-ÿ]*|ont interpell|maîtris[a-zà-ÿ]*|évacu[a-zà-ÿ]*|transport[a-zà-ÿ]*|sécuris[a-zà-ÿ]*/i;
+const ST_ON=/emm[eè]n[a-zà-ÿ]*|est passée?|sont passés|sont venus|est venue?|avec les pompiers|partie? avec|l'ont pris|sur place|arriv[a-zà-ÿ]*|présents?|interv[a-zà-ÿ]*|prenn[a-zà-ÿ]* en charge|prise? en charge|prend en charge|s'occupe|s'occupent|est là|sont là|engag[a-zà-ÿ]* sur|interpell[a-zà-ÿ]*|ont interpell|maîtris[a-zà-ÿ]*|évacu[a-zà-ÿ]*|transport[a-zà-ÿ]*|sécuris[a-zà-ÿ]*/i;
 const ST_AV=/appel[a-zà-ÿ]*|prévenu[a-zà-ÿ]*|préviens|prévient|avis[a-zà-ÿ]*|demand[a-zà-ÿ]*|contact[a-zà-ÿ]*|alert[a-zà-ÿ]*|missionn[a-zà-ÿ]*|envoy[a-zà-ÿ]*|envoie|engag[a-zà-ÿ]*|en route|en cours d'arrivée|déclench[a-zà-ÿ]*|sollicit[a-zà-ÿ]*|requis|j'ai fait le 1[578]|fait le 1[578]/i;
 function actors(cl){const A={};
  cl.forEach((c,i)=>{ACTOR.forEach(([k,lab,re])=>{if(!re.test(c))return;
@@ -1109,7 +1134,7 @@ function outcome(t){const o={};let m0;
  else if(/(toujours (présent|sur place|là|dans|à bord)|est encore (là|dans|présent|à bord)|reste sur place|refuse de (descendre|sortir|partir|quitter)|ça dure|depuis plusieurs minutes|toujours en cours)/i.test(t))o.aut='present';
  else if(/(pris la fuite|prend la fuite|prennent la fuite|s'enfui[a-zà-ÿ]*|s'est enfui|enfui|en fuite|s'est sauvé|se sauve|se sont sauvés|(?<![a-zà-ÿ])(?:re)?partis?e?s?(?![a-zà-ÿ])|a quitté les lieux|quitte les lieux|quittent les lieux|ont quitté|(?:il|elle|ils|elles|l'auteur|l'individu|les individus) (?:est |sont )?descendue?s?|descendue?s? (?:à|au|du|de la) (?:l'arrêt|la station|arrêt|bus|tram|rame)|a disparu|s'échapp[a-zà-ÿ]*|introuvable|plus là|auteurs? (est |sont )?(descendu|parti|en fuite|enfui)[a-zà-ÿ]*|(?:^|[.,:]\s*)descendue?s?(?![a-zà-ÿ])|fuite à l'arrivée|s'est barré|se barre|se sont barrés|s'est tiré|se sont tirés|s'est cassé|dispers[a-zà-ÿ]*|ont filé|a filé)/i.test(t))o.aut='fuite';if((m0=t.match(/descend[a-zà-ÿ]*\s+(?:à|a)\s+(?:l'arr[êe]t\s+|la station\s+)?([A-ZÉ][^,.;]{2,40}?)(?=[,.;]|\s+(?:et|il|elle)\s|$)/)))o.desc=m0[1].trim();
   let m;if(o.aut==='fuite'&&(m=t.match(/(?:fuite|enfui[a-zà-ÿ]*|parti[a-zà-ÿ]*|sauvé|courant|couru)\s+(?:à pied\s+|en courant\s+|en trottinette\s+|à vélo\s+|en voiture\s+|en scooter\s+)?(?:en\s+)?(?:direction|vers|en direction)\s+(?:de\s+|d')?((?:du |des |la |le |les |l')?[^,.;]{3,40}?)(?=[,.;]|\s+(?:et|il|elle|ils)\s|$)/i)))o.dir=m[1].trim();
- if(/(?<![a-z])(transport[a-zà-ÿ]*|évacu[a-zà-ÿ]*|achemin[a-zà-ÿ]*|conduit[a-zà-ÿ]*|emmen[a-zà-ÿ]*|part[a-zà-ÿ]*) (à|a|vers|sur) (l'h[ôo]pital|un h[ôo]pital|un centre hospitalier|les urgences|l'hosto|h[ée]h|lyon sud|édouard herriot|la croix-rousse|saint-joseph|saint-luc|femme mère enfant|mermoz|clinique)/i.test(t)||/hospitalis[a-zà-ÿ]*|transport[a-zà-ÿ]* (aux|à l') urgences/i.test(t)){o.hop=true;if((m=t.match(/h[ôo]pital\s+(?:de\s+|d'|du\s+)?(édouard herriot|lyon sud|de la croix-rousse|croix-rousse|saint-joseph saint-luc|saint-joseph|femme mère enfant|nord-ouest|de villefranche|des charpennes|[A-ZÉ][a-zà-ÿA-ZÉ\- ]{2,30})/i)))o.hopN=m[1].replace(/^de la /i,'');else if(/(?<![a-z])h[ée]h(?![a-z])|édouard herriot/i.test(t))o.hopN='Édouard Herriot';else if(/lyon sud/i.test(t))o.hopN='Lyon Sud'}
+ if(/(?<![a-z])(transport[a-zà-ÿ]*|évacu[a-zà-ÿ]*|achemin[a-zà-ÿ]*|conduit[a-zà-ÿ]*|emm[eè]n[a-zà-ÿ]*|part[a-zà-ÿ]*) (à|a|vers|sur) (l'h[ôo]pital|un h[ôo]pital|un centre hospitalier|les urgences|l'hosto|h[ée]h|lyon sud|édouard herriot|la croix-rousse|saint-joseph|saint-luc|femme mère enfant|mermoz|clinique)/i.test(t)||/hospitalis[a-zà-ÿ]*|transport[a-zà-ÿ]* (aux|à l') urgences/i.test(t)){o.hop=true;if((m=t.match(/h[ôo]pital\s+(?:de\s+|d'|du\s+)?(édouard herriot|lyon sud|de la croix-rousse|croix-rousse|saint-joseph saint-luc|saint-joseph|femme mère enfant|nord-ouest|de villefranche|des charpennes|[A-ZÉ][a-zà-ÿA-ZÉ\- ]{2,30})/i)))o.hopN=m[1].replace(/^de la /i,'');else if(/(?<![a-z])h[ée]h(?![a-z])|édouard herriot/i.test(t))o.hopN='Édouard Herriot';else if(/lyon sud/i.test(t))o.hopN='Lyon Sud'}
  if(/(refuse|ne veut pas|ne souhaite pas|décline|n'a pas voulu|a pas voulu|voulait pas|veut pas)[^.,;]{0,30}?(pompiers|secours|(?<![a-zà-ÿ])sp(?![a-zà-ÿ])|soins|samu|ambulance)|refus de (prise en charge|soins|transport)/i.test(t))o.refus=true;
  if(/(?<![a-z])(ne (veut|souhaite) pas|refuse de|ne va pas|pas de) (porter |déposer )?plainte|pas de plainte/i.test(t))o.plainte='non';
  else if(/plainte|porter plainte|déposer plainte|dépôt de plainte/i.test(t))o.plainte='oui';
@@ -1148,13 +1173,19 @@ function origin(cl,f){const c0=cl.slice(0,2).join(' ');let m;
 
 // ---------- 7. réécriture des faits (style main courante, au présent)
 function rewrite(s,ctx){let x=' '+s+' ';const f=ctx.f||{};
+ x=x.replace(/^\s*(?:(?:alors|donc|bon|ben|bah|voilà|ok|en fait|bref|du coup|là|ouais|oui|allô|écoute|attends)(?:\s+|\s*,\s*))+/i,' ');
+ if(/^\s*c'est\s+(?:le|la|l'|un|une)\s*[^,.;]{0,40}?\s+qui\s+(?:m'|nous\s+)?(?:appelle|a appelé|signale|prévient|contacte)\s*$/i.test(x))return '';
+ if(/^\s*(?:ils|elles|il|elle)\s+(?:ont|a)\s+(?:un|une)\s+(?:conducteur|conductrice|cr|chauffeur|agent|rame|bus)(?:\s+(?:sur|de|du)\s+(?:la\s+)?(?:ligne\s+)?\S+)?\s*$/i.test(x))return '';
+ x=x.replace(/^\s*(?:j'ai|on a|je reçois|on reçoit|je viens d'avoir)?\s*un appel d'(un|une)\s+/i,'$1 ');
+ if(/^\s*(?:j'ai|on a|j'ai eu|on a eu|je viens d'avoir|on vient d'avoir)\s+[^,.;]{0,60}?\s+qui\s+(?:m'|nous\s+)?(?:appelle|appelait|a appelé|signale|prévient|contacte)\s*(?:au téléphone|à la radio|par radio|par téléphone)?\s*$/i.test(x))return '';
  // temps
  x=x.replace(/,?\s*il y a\s+(?:environ\s+|à peu près\s+)?(\d{1,3}|une?|deux|trois|quatre|cinq|dix|quinze|vingt|trente|quarante|cinquante)\s*(min|minutes?|h|heures?|mn)(?![a-zà-ÿ])/gi,' ');
  x=x.replace(/,?\s*il y a (une|1) demie?[- ]heure|,?\s*il y a un quart d'heure/gi,' ');
  x=x.replace(/,?\s*(?:vers|à|aux alentours de|autour de|aux environs de)\s+(?:environ\s+)?[0-2]\dh[0-5]\d/gi,' ').replace(/(^|\s)[0-2]\dh[0-5]\d\s*,?/g,' ');
+ x=x.replace(/(?<![a-zà-ÿ])(ce matin|cet après-midi|ce soir|cette nuit|tout à l'heure|hier soir|hier matin|aujourd'hui)(?![a-zà-ÿ])/gi,' ');
  x=x.replace(/\s*(à l'instant|à l'heure actuelle|en ce moment|actuellement)\s*/gi,' ').replace(/^\s*(du matin|du soir|de l'après-midi)(?![a-zà-ÿ])|(?<=\s)(du matin|du soir)(?=[\s,.]|$)/gi,' ').replace(/\s*(il|c')\s*(était|est)\s*(à peu près|environ|vers)?\s*[.,]?\s*$/i,' ');
  // origine de l'info et formules d'appel
- x=x.replace(/^\s*(le|la|l'|un|une|notre)?\s*(pc[ -]?(bus|tram|m[ée]tro)|pcc|cr|chauffeur|chauffeuse|conducteur|conductrice|machiniste|al|ads|agent( de ligne)?|équipe sia|sia|am|régulateur|police|voyageur|voyageuse|client|cliente)\s+(du |de la |de |d')?((?:ligne\s+)?[A-Z]{0,3}\d{1,3}E?|T\d{1,2}|m[ée]tro [A-D])?\s*(m'|nous )?(appelle|a appelé|vient d'appeler|signale|informe|indique|prévient|rapporte|dit|me dit|nous dit|m'a dit|me fait remonter|remonte|annonce|déclare|explique)\s*(au téléphone|à la radio|par radio|par téléphone)?\s*(pour (me|nous) (dire|signaler|informer)|et (me|nous) (dit|signale|informe))?\s*(qu'|que |:|,)?\s*/i,' ');
+ x=x.replace(/^\s*(le|la|l'|un|une|notre)?\s*(pc[ -]?(bus|tram|m[ée]tro)|pcc|cr|chauffeur|chauffeuse|conducteur|conductrice|machiniste|al|ads|agent( de ligne)?|équipe sia|sia|am|régulateur|police|client|cliente)\s+(du |de la |de |d')?((?:ligne\s+)?[A-Z]{0,3}\d{1,3}E?|T\d{1,2}|m[ée]tro [A-D])?\s*(m'|nous )?(appelle|a appelé|vient d'appeler|signale|informe|indique|prévient|rapporte|dit|me dit|nous dit|m'a dit|me fait remonter|remonte|annonce|déclare|explique)\s*(au téléphone|à la radio|par radio|par téléphone)?\s*(pour (me|nous) (dire|signaler|informer)|et (me|nous) (dit|signale|informe))?\s*(qu'|que |:|,)?\s*/i,' ');
  x=x.replace(/^\s*(?:j'ai|on a|j'ai eu|on a eu)\s+(?:le|la|l'|un|une)?\s*(?:pc[ -]?(?:bus|tram|m[ée]tro)|pcc|cr|chauffeur|conducteur|conductrice|al|ads|sia|am|police|voyageur|voyageuse)(?:\s+(?:du|de la|de)\s+\S+)?\s+qui\s+(?:m'|nous\s+)?(?:appelle|signale|informe|dit|prévient|appelait)\s*(?:pour (?:me|nous) (?:dire|signaler)\s*)?(?:qu'|que\s+)?/i,' ');
  x=x.replace(/^\s*(j'ai|je viens d'avoir|on a|on vient d'avoir|j'ai eu|on a eu)\s+(le|la|l'|un|une)?\s*\S+(\s+(du|de la|de)\s+\S+)?\s+(au téléphone|à la radio|en ligne)\s*(qui|,)?\s*(me|nous)?\s*(dit|signale|explique|informe)?\s*(qu'|que)?\s*/i,' ');
  x=x.replace(/^\s*(info|infos|information)\s+\S+\s*:\s*/i,' ');
@@ -1163,10 +1194,11 @@ function rewrite(s,ctx){let x=' '+s+' ';const f=ctx.f||{};
  x=x.replace(/\s*(?:sur|à|aux|par)\s+(?:les |la )?(?:caméras?|vidéos?|vidéoprotection|écrans?)\s*,?\s*(?:je vois|j'ai vu|on voit|on a vu|on aperçoit)\s*(?:qu'|que )?/i,' ');
  // lieux déjà dans l'en-tête
  x=x.replace(/^\s*(?:le|la|l')?\s*(?:pc[ -]?(?:bus|tram|m[ée]tro)|pcc|cr|chauffeur|conducteur|al|ads|sia)\s+(?:me |nous )?(?:signale|informe de|rapporte)\s+/i,' ');
- const rm=[];if(f.arret){rm.push(f.arret);const w=f.arret.split(' ');if(w.length>2&&/^(gare|place|station)$/i.test(w[0]))rm.push(w.slice(1).join(' '));if(w.length>2&&/^gare de$/i.test(w[0]+' '+w[1]))rm.push(w.slice(2).join(' '))}if(f.prec&&!/–/.test(f.prec)&&f.mode==='autre')rm.push(f.prec);
- rm.forEach(a=>{const r=fuzzyRe(a).source.replace(/^\(\?<!\[a-zà-ÿ0-9\]\)/,'');x=x.replace(new RegExp(",?\\s*(?:de la station|sur le quai de la station|sur le quai de|a|à l'arr[êe]t|l'arr[êe]t|arr[êe]t|à la station|en station|station|à hauteur d[eu]|au niveau d[eu]|à|au|en gare de|à la gare de|devant|au terminus d[eu']?|au terminus|vers|sur le quai d[eu'])?\\s*(?:de |du |d')?"+r,'gi'),' ')});
+ const rm=[];if(f.arret){rm.push(f.arret);const aw=f.arret.split(/\s+/);if(aw.length>3)rm.push(aw.slice(0,3).join(' '));const ws=f.arret.split(/\s+/).filter(x=>x.length>=6&&!/^(gare|place|station|charles|saint|sainte|centre|grand|villeurbanne|lyon)$/i.test(x));if(ws.length&&f.arret.split(/\s+/).length>1)ws.forEach(x=>rm.push(x));const w=f.arret.split(' ');if(w.length>2&&/^(gare|place|station)$/i.test(w[0]))rm.push(w.slice(1).join(' '));if(w.length>2&&/^gare de$/i.test(w[0]+' '+w[1]))rm.push(w.slice(2).join(' '))}if(f.prec&&!/–/.test(f.prec)&&f.mode==='autre')rm.push(f.prec);
+ rm.forEach(a=>{const r=fuzzyRe(a).source.replace(/^\(\?<!\[a-zà-ÿ0-9\]\)/,'');if(new RegExp('entre\\s+(?:[^,.;]{0,30}\\s)?'+r,'i').test(x)||new RegExp(r+'\\s+et\\s','i').test(x)&&/entre/i.test(x))return;x=x.replace(new RegExp(",?\\s*(?:de la station|sur le quai de la station|sur le quai de|a|à l'arr[êe]t|l'arr[êe]t|arr[êe]t|à la station|en station|station|à hauteur d[eu]|au niveau d[eu]|à|au|en gare de|à la gare de|devant|au terminus d[eu']?|au terminus|vers|sur le quai d[eu'])?\\s*(?:de |du |d')?"+r,'gi'),' ')});
  if(f.ligne){const L=f.ligne.replace(/([A-Z]+)(\d+)/,'$1\\s?$2');const id="(?<![A-Za-z0-9])"+L+"(?![A-Za-zà-ÿ0-9'])";
   x=x.replace(new RegExp(",?\\s*(?:sur|dans|à bord d[eu']|de|du|en)\\s+(?:la |le |l')?(?:ligne\\s+|bus\\s+|tram\\s+|tramway\\s+|métro\\s+|metro\\s+)?(?:de la ligne |du |de la )?"+id,'g'),' ');
+  x=x.replace(new RegExp("(le |la )(métro|metro|tram|bus|ligne)\\s+"+id+"(?=\\s+(?:est|a|s'|se|ne|n'|reste|redémarre|repart|circule|roule))",'gi'),'$1$2');
   x=x.replace(new RegExp("(?:la |le )?(?:ligne|métro|metro)\\s+"+id,'g'),' ');
   x=x.replace(new RegExp("(rame|bus|tram|tramway|véhicule|conducteur|chauffeur|cr|métro)\\s+(?:du |de la |de |sur la |sur le )?(?:ligne\\s+)?"+id,'g'),'$1');
   if(/^[A-Z]{1,3}\d|^\d|^T\d/.test(f.ligne))x=x.replace(new RegExp(",?\\s*"+id,'g'),' ')}
@@ -1181,7 +1213,8 @@ function rewrite(s,ctx){let x=' '+s+' ';const f=ctx.f||{};
  x=x.replace(/(?<![a-zà-ÿ])(a|ont) été\s+/gi,(m,a)=>a.toLowerCase()==='ont'?'sont ':'est ');
  x=x.replace(/(?<![a-zà-ÿ])vient d'être\s+/gi,'est ').replace(/(?<![a-zà-ÿ])viennent d'être\s+/gi,'sont ');
  x=x.replace(/(?<![a-zà-ÿ])vient de\s+/gi,'').replace(/(?<![a-zà-ÿ])viennent de\s+/gi,'');
- x=x.replace(/(?<![a-zà-ÿ])il y a\s+(un|une|des|deux|trois|quatre|plusieurs)\s+/gi,'$1 ');
+ x=x.replace(/(?<![a-zà-ÿ])(?:il )?y a\s+(un|une|des|deux|trois|quatre|plusieurs)\s+/gi,'$1 ').replace(/^\s*(?:on a|j'ai)\s+(un|une|des|deux|trois|plusieurs)\s+/i,'$1 ');
+ x=x.replace(/(?<![a-zà-ÿ])(?:me|m'|nous)\s*(signale|dit|indique|informe|explique|rapporte)(?![a-zà-ÿ])/gi,(m,v)=>/dit|explique|rapporte/i.test(v)?'signale':v);
  x=x.replace(/(?<![a-zà-ÿ])(un mec|un gars|un type|un keum)(?![a-zà-ÿ])/gi,'un individu').replace(/(?<![a-zà-ÿ])(le mec|le gars|le type)(?![a-zà-ÿ])/gi,"l'individu").replace(/(?<![a-zà-ÿ])(des mecs|des gars|des types)(?![a-zà-ÿ])/gi,'des individus').replace(/(?<![a-zà-ÿ])(une meuf|une nana)(?![a-zà-ÿ])/gi,'une femme').replace(/(?<![a-zà-ÿ])chauffeur(?![a-zà-ÿ])/gi,'conducteur').replace(/(?<![a-zà-ÿ])tabass/gi,'frapp').replace(/(?<![a-zà-ÿ])baston(?![a-zà-ÿ])/gi,'bagarre').replace(/(?<![a-zà-ÿ])flics?(?![a-zà-ÿ])/gi,'police');
  x=x.replace(/(?<![a-zà-ÿ])j'ai\s+/gi,'le PCS a ').replace(/(?<![a-zà-ÿ])je\s+/gi,'le PCS ').replace(/(?<![a-zà-ÿ])on a\s+/gi,'il y a eu ');
  x=x.replace(/\u0001/g,' ').replace(/(?<![a-zà-ÿ])cr(?![a-zà-ÿ])/g,'CR').replace(/(?<![a-zà-ÿ])(sp)(?![a-zà-ÿ])/g,'SP').replace(/(?<![a-zà-ÿ])(fdo)(?![a-zà-ÿ])/g,'FDO');
@@ -1190,6 +1223,8 @@ function rewrite(s,ctx){let x=' '+s+' ';const f=ctx.f||{};
  if(f.prec&&/sur le quai/.test(f.prec))x=x.replace(/\s*(sur le quai|à quai)(?![a-zà-ÿ])/gi,' ');
  if(f.prec&&/à bord/.test(f.prec))x=x.replace(/\s*(dans la rame|dans le bus|à bord du bus|à bord de la rame|dans le tram|dans le véhicule)(?![a-zà-ÿ])/gi,' ');
  x=x.replace(/\s+/g,' ').replace(/\s+([,.])/g,'$1').replace(/^[\s,]+|[\s,]+$/g,'');
+ if(/^(ça|ca|cela|c'est|c'était)\s+(s'est passé|s'est produit|se passe|passé|arrivé)?\s*$/i.test(x))return '';
+ if(x.split(/\s+/).filter(Boolean).length<3&&/^(il|elle|ils|elles|on|ce|c'|ça|cela|là)(?![a-zà-ÿ])/i.test(x)&&!/(bless|choqu|fuite|consci|frapp|agress|tomb|malaise)/i.test(x))return '';
  if(!x)return '';x=cap(x);if(!/[.!?]$/.test(x))x+='.';return x}
 const ACTION_CL=/(?<![a-z])(pompiers?|sp|sdmis|samu|secours|ambulance|police|policiers|bac|fdo|forces de l'ordre|gendarm[a-zà-ÿ]*|flics?|pm|sia|équipe|patrouille|ads|dci|am|agent de maîtrise|maîtrise|hiérarchie|pc bus|pc tram|pc métro|pcc|codir|astreinte|déminage|plainte|vidéo|images|caméras?|hôpital|urgences|transport[a-zà-ÿ]*|évacu[a-zà-ÿ]*|interpell[a-zà-ÿ]*|en fuite|pris la fuite|prend la fuite|s'enfui[a-zà-ÿ]*|enfui[a-zà-ÿ]*|parti[a-zà-ÿ]*|quitt[a-zà-ÿ]* les lieux|descendu[a-zà-ÿ]*|reprise|reprend|interromp[a-zà-ÿ]*|interruption|coup[ée]e|hlp|retir[a-zà-ÿ]*|périmètre|prm|prt|prf|services? partiels|dévi[a-zà-ÿ]*|plaquette|choqué[a-zà-ÿ]*|retard[a-zà-ÿ]*|refuse|rentre au dépôt|dépôt|levée de doute|constat)(?![a-z])/i;
 const SUBJ_ACT=/^\s*(?:et\s+)?(?:qui|il|elle|ils|elles|on|je|j'|nous|l'auteur|l'individu|les individus|les auteurs|le mis en cause|les pompiers|le sp|les sp|le sdmis|le samu|la police|les policiers|la bac|les fdo|les forces de l'ordre|la pm|l'équipe|une équipe|la sia|l'ads|les ads|le pc|l'am|l'agent de maîtrise|la victime|le conducteur|le chauffeur|la conductrice|l'agent|le cr)(?![a-zà-ÿ])/i;
@@ -1197,7 +1232,8 @@ const FACT_CL=/(agress|frapp|coups?(?![a-zé])|caillass|insult|menac|crach|vol|a
 
 // ---------- 8. analyse complète
 function comprendre(raw,now){now=now||new Date();const t=prep(raw);const cl=clauses(t);
- const f=place(t,now);
+ const tP=t.replace(/((?:h[ôo]pital|urgences|clinique|emm[eè]n[a-zà-ÿ]*|transport[a-zà-ÿ]*|évacu[a-zà-ÿ]*|conduit[a-zà-ÿ]*|achemin[a-zà-ÿ]*)[^,.;]{0,20}?)(édouard herriot|lyon sud|la croix-rousse|croix-rousse|saint-joseph[^,.;]*|femme mère enfant|mermoz|hôpital nord-ouest)/gi,'$1');
+ const f=place(tP,now);
  const tN=t.replace(/(se faire |te |lui |vous |leur )?(casser|péter|défoncer|exploser|éclater) (la gueule|la figure|la tête|les dents)/gi,' menacer de violences ').replace(/(?<![a-zà-ÿ])(pas de|pas d'|aucune?|sans|ni|rien|n'ont rien|n'a rien|pas)\s+(?:de |d'|été )?(tags?|tagu[a-zà-ÿ]*|jets?|projectiles?|lancé|dégradations?|dégâts?|dégât|vol|volé|cassé|casse|bris|intrusion|interpellation|interpellé|blessés?|blessure|violences?|coups?|menaces?|atteinte|arme|feu|fumée|auteur|incident|plainte|victime)(?![a-zà-ÿ])/gi,' ');
  const ctx=detectCtx(tN);const tn=stripPlaces(tN);const S=faitScore(tn,ctx);const S2=faitScore(norm(tn),ctx);if(!Object.keys(S).length)Object.assign(S,S2);
  const ranked=Object.entries(S).map(([k,v])=>[+k,v]).sort((a,b)=>b[1]-a[1]).map(x=>x[0]);
@@ -1235,7 +1271,7 @@ function resultats(a){const O=a.O||{},A=a.A||{};const r=[];const vw=victimWord(a
  else if(A.sp&&A.sp.st==='on'&&(a.ctx.blesse||/Malaise|Accidents de véhicules TCL avec intervention|contact direct|armes/.test(a.row||'')))r.push(`${V} est prise en charge par les pompiers`.replace(/(Le conducteur|L'agent) est prise/,'$1 est pris'));
  if(O.choc)r.push(`${V} est choqué${a.cible==='A'?'':'e'}`);
  if(O.aut==='interpellé')r.push(`L'auteur est interpellé`);else if(O.aut==='fuite')r.push(O.desc&&!O.dir?`L'auteur descend à ${O.desc}`:`L'auteur prend la fuite${O.dir?' en direction '+(/^(du|des)\s/i.test(O.dir)?O.dir:/^(la|les|l')\s?/i.test(O.dir)?'de '+O.dir:/^le\s/i.test(O.dir)?'du '+O.dir.slice(3):'de '+cap(O.dir)):''}`.replace("de l' ","de l'"));else if(O.aut==='present')r.push(`L'auteur est toujours présent`);
- if(O.svc==='stop'&&a.cible==='A')r.push(`${V} interrompt son service`);else if(O.svc==='reprend')r.push(`${V} reprend son service`);
+ if(O.svc==='stop'&&a.cible==='A')r.push(`${V} interrompt son service`);else if(O.svc==='reprend')r.push(/continu|poursui/i.test(a.t||'')?`${V} poursuit son service`:`${V} reprend son service`);
  if(O.plaq)r.push(`Remise d'une plaquette Aide aux victimes`);
  if(O.plainte==='oui')r.push(`${V} va déposer plainte`);else if(O.plainte==='non')r.push(`${V} ne souhaite pas déposer plainte`);
  if(O.video)r.push(`Demande de retrait vidéo`);
@@ -1245,13 +1281,17 @@ function mcRecit(a,o){// a = analyse du 1er récit ; o = incident
  const sia=A.sia?'SIA / ':'';const src=a.src||'PCS';const srcK={'PC Bus':'pcbus','PC Tram':'pctram','PC Métro':'pcmetro'}[src];
  const h=(f.heure||'').replace(':','h');const lp=lieuPhrase(f);
  const subj=(src==='CR'||src==='conducteur'||src==='PC Bus'||src==='PC Tram'||src==='PC Métro')&&a.ctx.victimA?'le conducteur':null;
- const ff=a.facts.map(s=>rewrite(s,{f,subj})).filter(Boolean);
+ const O=a.O||{};const CORE=/(frapp|agress|insult|menac|crach|vol[éeé]?(?![a-zà-ÿ])|arrach|touch|bless|cass|tag|malaise|tomb|chut|feu|colis|laser|coup)/i;
+ const DUP=c=>!CORE.test(c)&&((O.aut&&/(descendu|parti|enfui|fuite|sauvé|quitt|dispers|toujours (là|présent|dans|sur place|à bord))/i.test(c))||(O.svc&&/(continu|reprend|arr[êe]t|interromp|poursui)[a-zà-ÿ]*\s+(son |le |du )?service/i.test(c))||(O.plainte&&/plainte/i.test(c))||(O.hop&&/(h[ôo]pital|urgences|emm[eè]n|transport)/i.test(c))||/^\s*(ça|ca|cela) s'est passé\s*$/i.test(c.replace(/\s*(vers|à)\s+\d{2}h\d{2}.*$/,'')));
+ const ff=a.facts.filter((c,i)=>i===0&&a.facts.length===1||!DUP(c)).map(s=>rewrite(s,{f,subj})).filter(x=>x&&x.replace(/[.\s]/g,'').length>3);
  let head=`${sia}Info ${src} : ${h?'À '+h:''}${h&&lp?', ':''}${lp}${h||lp?', ':''}`;
- let body=ff.length?ff.join(' '):'';if(body&&(h||lp)&&!/^[A-ZÉ]{2}|^[A-ZÉ][a-zé]+ [A-ZÉ]/.test(body))body=body.charAt(0).toLowerCase()+body.slice(1);
+ let body=ff.length?ff.join(' '):'';if(body&&(h||lp)&&(!/^[A-ZÉ]{2}|^[A-ZÉ][a-zé]+ [A-ZÉ]/.test(body)||/^(Le|La|Les|L'|Un|Une|Des|Il|Elle|Ils|Elles) /.test(body)))body=body.charAt(0).toLowerCase()+body.slice(1);
  const acts=[];['sia','sp','samu','pn','pm','ads','dci','am','pcbus','pctram','pcmetro','demin','ds','codir'].forEach(k=>{const x=A[k];if(!x||x.refus&&k==='sp')return;if(k==='sia'&&!A.sia)return;if(k===srcK)return;acts.push(ALAB[k][x.st==='on'?1:0])});
- const cons=(a.C||[]).filter(c=>!/^Pas d'impact/.test(c)).map(c=>c.replace(/^Trafic interrompu/,'Exploitation interrompue'));
+ const fj=ff.join(' ').toLowerCase();const KW=[[/immobilis/,/immobilis/],[/retiré/,/retir/],[/évacu|fermée/,/évacu|fermée/],[/interrompu/,/interromp/]];
+ const cons=(a.C||[]).filter(c=>!/^Pas d'impact/.test(c)&&!(c==='Service non assuré'&&O.svc==='stop')&&!KW.some(([a1,b1])=>a1.test(c.toLowerCase())&&b1.test(fj))).map(c=>c.replace(/^Trafic interrompu/,'Exploitation interrompue'));
  const res=resultats(Object.assign({},a,{f,cible:o.cible,row:o.isis!=null&&ISIS[o.isis]?ISIS[o.isis].n:''}));
  let s=(head+body).replace(/,\s*$/,'').trim();if(!/[.!?]$/.test(s))s+='.';
+ const rp=(a.t||'').match(/(reprise|reprend|rétabli[a-zà-ÿ]*|remis[e]? en service|redémarr[a-zà-ÿ]*)[^.,;]{0,25}?(\d{2}h\d{2})/i);if(rp)res.push("Reprise de l'exploitation à "+rp[2]);
  const tail=[...acts,...cons,...res].map(x=>cap(x)+'.').join(' ');
  return (s+' '+tail).replace(/\s+/g,' ').replace(/\.\./g,'.').trim()}
 function suiteLine(e,o){const f=o.f||{};let x=rewrite(e.t,{f:{}});if(!x)return '';return (e.h?e.h.replace(':','h')+' : ':'')+x}
@@ -1263,6 +1303,7 @@ function tclParts(a){const A=a.A||{},O=a.O||{};const co=[...(a.C||[])];
  if(O.plainte==='oui')me.push('plainte prévue');if(O.video)me.push('retrait vidéo demandé');
  return {co:co.join(', '),me:cap(me.join(', '))}}
 return {prep,clauses,place,comprendre,rewrite,mcRecit,suiteLine,tclParts,lieuPhrase,parseTimes,actors,outcome,conseq,origin,detectCtx}})();
+window._RC=RC;window._ISIS=ISIS;
 
 function tellHtml(id,small){return `<div class="tell"><label for="${id}">Raconte l'incident<small>Comme ça vient : quoi, où, quand, qui est sur place. Pour dicter, touche le micro 🎙 du clavier.</small></label><textarea class="f vtext" id="${id}" rows="${small?2:3}" placeholder="Ex. : le CR de la C3 m'appelle, il vient de se faire frapper par un voyageur à Bonnevay, l'auteur est parti vers la gare, j'envoie la SIA…">${esc(window._tellDraft||'')}</textarea><button class="btn big1" data-tellgo="${id}">Créer la fiche</button><div id="${id}-r"></div></div>`}
 function bindTell(id){const t=$('#'+id);if(!t)return;t.oninput=()=>{window._tellDraft=t.value};const b=view.querySelector(`[data-tellgo="${id}"]`);if(b)b.onclick=()=>tellGo(id)}
@@ -1278,7 +1319,45 @@ function createFromTell(text,a){const id=a.id;const row=ISIS[id];let cible=a.cib
   f:{date:f.dayBack?isoOf(new Date(now.getTime()-864e5)):todayIso(),heure:f.heure||hhmm(now),mode:f.mode||'',ligne:f.ligne||'',arret:f.arret||'',prec:f.prec||'',dir:f.dir||''},
   recit:[{h:f.heure||hhmm(now),t:text}],tcl:{},mc:{},voice:{alt:a.alt}};
  const c=ctxFrom(base);base.logi=c.logi;base.title=c.title;newInc(base);toast('Fiche créée : relis-la')}
-R.voice=function(){R.home();const t=$('#htell');if(t){t.focus();t.scrollIntoView({block:'center'})}};
+R.voice=function(){go('tell',null,{noPush:1})};
+// ---------- RACONTER : écran plein, aperçu de ce qui est compris
+let tlPick=null;
+function dictHint(){const ua=navigator.userAgent;const ios=/iPhone|iPad|iPod/.test(ua)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);const and=/Android/.test(ua);const win=/Win/.test(navigator.platform);const mac=/Mac/.test(navigator.platform)&&!ios;
+ return ios?'<i>🎙</i><span>Touche le <b>micro du clavier</b> (en bas à droite) et parle.<small>Pas de micro ? Réglages › Général › Clavier › Activer Dictée.</small></span>':and?'<i>🎙</i><span>Touche le <b>micro du clavier</b> et parle.</span>':win?'<i>🎙</i><span>Pour dicter : <b>touche Windows + H</b>.</span>':mac?'<i>🎙</i><span>Pour dicter : <b>deux fois Fn</b> (ou 🌐).</span>':'<i>🎙</i><span>Dicte avec le micro du clavier.</span>'}
+R.tell=function(){tlPick=null;
+ view.innerHTML=`<h1>Raconter un incident</h1><div class="sub">Comme ça vient : ce qui se passe, où, quand, qui est sur place, ce que tu as engagé.</div>
+ <div class="dict">${dictHint()}</div>
+ <div class="tlbox"><textarea class="f vtext" id="ttext" rows="7" placeholder="Ex. : le CR de la C3 m'appelle, il vient de se faire frapper par un voyageur à Bonnevay, l'auteur est parti vers la gare, j'envoie la SIA et je préviens la police">${esc(window._tellDraft||'')}</textarea></div>
+ <div id="tprev" class="tprev"></div>
+ <button class="btn big1" id="tgo" style="width:100%;margin-top:8px">Créer la fiche</button>
+ <div class="btns" style="justify-content:space-between"><button class="lnk" id="tpick">Choisir le fait moi-même ›</button><button class="lnk" id="tclr" style="color:var(--mute)">Effacer</button></div>`;
+ const t=$('#ttext');let tm=null;
+ const upd=()=>{window._tellDraft=t.value;clearTimeout(tm);tm=setTimeout(()=>tellPrev(t.value),280)};
+ t.oninput=upd;$('#tgo').onclick=()=>tellCreate();
+ $('#tpick').onclick=()=>{const text=t.value.trim();if(text.length>5){window._tellPending={text,a:RC.comprendre(text)}}window._tellDraft='';go('isis',{p:[]})};
+ $('#tclr').onclick=()=>{t.value='';window._tellDraft='';tlPick=null;tellPrev('');t.focus()};
+ tellPrev(t.value);try{t.focus({preventScroll:true})}catch(e){t.focus()}};
+function tellAna(text){const a=RC.comprendre(text);if(tlPick!=null&&ISIS[tlPick]){a.alt=[a.id,...a.alt].filter(i=>i!=null&&i!==tlPick).slice(0,3);a.id=tlPick;const c=ISIS[tlPick].c;if(c==='A'||c==='V'||c==='-')a.cible=c}return a}
+function tellPrev(text){const box=$('#tprev');if(!box)return;text=(text||'').trim();
+ if(text.length<12){box.innerHTML='';const g0=$('#tgo');if(g0)g0.textContent='Créer la fiche';return}
+ const a=tellAna(text);const f=a.f||{};const row=a.id!=null?ISIS[a.id]:null;const gb=$('#tgo');
+ const lieu=RC.lieuPhrase(f);const A=a.A||{};const eng=Object.keys(A).filter(k=>!A[k].refus).map(k=>({sp:'Pompiers',samu:'SAMU',pn:'Police',pm:'Police municipale',sia:'SIA',ads:'ADS',dci:'DCI',am:'AM',pcbus:'PC Bus',pctram:'PC Tram',pcmetro:'PC Métro',codir:'CODIR',ds:'Dir. Sûreté',demin:'Déminage'}[k]+(A[k].st==='on'?' (sur place)':'')));
+ const O=a.O||{};const res=[O.aut==='fuite'?'auteur en fuite'+(O.dir?' vers '+O.dir:''):O.aut==='interpellé'?'auteur interpellé':O.aut==='present'?'auteur toujours présent':'',O.hop?'transport hôpital':'',O.plainte==='oui'?'plainte':O.plainte==='non'?'pas de plainte':'',O.video?'retrait vidéo':''].filter(Boolean);
+ const alts=(a.alt||[]).filter(i=>i!=null&&ISIS[i]).slice(0,3);
+ box.innerHTML=`<h4>Ce que j'ai compris</h4>
+  <div class="pr"><i>${row?'⚠':'?'}</i><div><b>${row?esc(row.n):'Type de fait non reconnu'}</b>${row?`<em>${esc(row.f1)}${a.cible&&CIB[a.cible]&&a.cible!=='-'?' · victime : '+esc(CIB[a.cible].toLowerCase()):''}</em>`:'<em>Précise (ex. « frappé », « malaise », « colis ») ou choisis-le.</em>'}
+   ${alts.length||row?`<div class="vrow">${alts.map(i=>`<button class="chip" data-tpk="${i}">${esc(ISIS[i].n.length>42?ISIS[i].n.slice(0,40)+'…':ISIS[i].n)}</button>`).join('')}<button class="chip" data-tpk="x">Autre…</button></div>`:''}</div></div>
+  <div class="pr"><i>📍</i><div><b>${lieu?esc(lieu):'<em>Lieu non trouvé</em>'}</b>${!lieu?'<em>Dis la ligne et l\'arrêt (ex. « T3 Vaulx-en-Velin La Soie »). Tu pourras corriger dans la fiche.</em>':''}</div></div>
+  <div class="pr"><i>🕒</i><div><b>${f.heure?esc(f.heure.replace(':','h'))+(f.dayBack?' (hier)':''):'Maintenant ('+hhmm(new Date()).replace(':','h')+')'}</b></div></div>
+  ${eng.length?`<div class="pr"><i>🚨</i><div><b>${esc(eng.join(' · '))}</b></div></div>`:''}
+  ${res.length?`<div class="pr"><i>➜</i><div><b>${esc(res.join(' · '))}</b></div></div>`:''}`;
+ if(gb)gb.textContent=row?'Créer la fiche':'Choisir le fait et créer la fiche';
+ box.querySelectorAll('[data-tpk]').forEach(b=>b.onclick=()=>{if(b.dataset.tpk==='x'){$('#tpick').click();return}tlPick=+b.dataset.tpk;tellPrev($('#ttext').value)})}
+function tellCreate(){const t=$('#ttext');const text=(t.value||'').trim();
+ if(text.length<6){toast('Raconte d\'abord ce qui se passe');t.focus();return}
+ const a=tellAna(text);
+ if(a.id==null){window._tellPending={text,a};window._tellDraft='';go('isis',{p:[]});return}
+ window._tellDraft='';tlPick=null;createFromTell(text,a)}
 // ================= PC ÉVÉNEMENTIEL / PC CRISE
 const PC=D.pce;let pt=1;
 R.pce=function(){
