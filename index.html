@@ -267,6 +267,10 @@ body.subpage header.top .brand{font-size:14px}
 .lkogo{width:84px;height:84px;margin:0 auto 14px;border-radius:22px;background:var(--navy);display:grid;place-items:center;border-bottom:6px solid var(--acc)}
 .lkogo span{color:#fff;font-weight:900;font-size:22px;letter-spacing:1px}
 .lock input{text-align:center;font-family:var(--mono);font-size:17px;margin-top:16px;letter-spacing:1px}
+.syncb{display:flex!important;align-items:center;gap:5px;height:38px}.syncb span{font-size:13px}
+.syncb.ok{color:var(--ok)}.syncb.err{color:var(--red);border-color:var(--red)}.syncb.busy svg{animation:spin 1s linear infinite}.syncb.off{color:var(--mute)}
+@keyframes spin{to{transform:rotate(360deg)}}
+@media(max-width:420px){.syncb span{display:none}}
 @media(min-width:900px){
   nav.bot{display:none}
   nav.side{display:flex;flex-direction:column;gap:4px;width:220px;flex:none;position:sticky;top:0;height:100vh;padding:18px 10px;border-right:1px solid var(--line);background:var(--card)}
@@ -290,7 +294,7 @@ body.subpage header.top .brand{font-size:14px}
       <button class="hback" id="hback" aria-label="Retour"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg><span>Retour</span></button><div class="brand"><span class="logo">PCS</span>Superviseur<span class="mono" id="hclk"></span></div>
       <div class="search"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
         <input id="q" type="search" placeholder="Rechercher : fiche, numéro, indicatif, sigle…" autocomplete="off"></div>
-      <span class="sync" id="sync"></span><button class="iconbtn" id="theme" title="Thème clair / foncé">☾ Foncé</button>
+      <span class="sync" id="sync"></span><button class="iconbtn syncb off" id="syncbtn" title="Synchroniser"></button><button class="iconbtn" id="theme" title="Thème clair / foncé">☾ Foncé</button>
     </header>
     <div class="wrap" id="view"><div class="empty">Chargement…</div></div>
   </main>
@@ -304,7 +308,7 @@ body.subpage header.top .brand{font-size:14px}
 <div class="lock" id="lock"><div class="lockin"><div class="lkogo"><span>PCS</span></div><h1>Superviseur</h1><div class="sub" id="lockmsg">Saisis ton code d'accès</div>
 <input class="f" id="lockcode" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="SV-XXXX-XXXX-XXXX-XXXX">
 <button class="btn big1" id="lockgo" style="width:100%;margin-top:12px">Déverrouiller</button><div class="sub" id="lockerr" style="color:var(--red);margin-top:10px;min-height:18px"></div>
-<div class="sub" style="margin-top:18px;font-size:11.5px">Données chiffrées sur l'appareil · aucun envoi vers l'extérieur · diffusion restreinte</div></div></div><div class="snack" id="snack"></div>
+<div class="sub" style="margin-top:18px;font-size:11.5px">Contenu chiffré · aucun envoi vers l'extérieur (sauf ta synchro GitHub si tu l'actives) · diffusion restreinte</div></div></div><div class="snack" id="snack"></div>
 <script>/* Superviseur — déverrouillage et déchiffrement local (aucun envoi externe) */
 (function(){
 const B=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));
@@ -316,14 +320,16 @@ async function tryCode(code){const base=await crypto.subtle.importKey('raw',enc(
  for(const k of VAULT.keys){const kek=await crypto.subtle.deriveKey({name:'PBKDF2',hash:'SHA-256',salt:B(k.salt),iterations:VAULT.iter},base,{name:'AES-GCM',length:256},false,['decrypt']);
   try{return new Uint8Array(await crypto.subtle.decrypt({name:'AES-GCM',iv:B(k.iv)},kek,B(k.wk)))}catch(e){}}
  return null}
-async function openVault(raw){DK=await crypto.subtle.importKey('raw',raw,'AES-GCM',false,['decrypt']);
+async function openVault(raw){DK=await crypto.subtle.importKey('raw',raw,'AES-GCM',false,['encrypt','decrypt']);
  const pt=await crypto.subtle.decrypt({name:'AES-GCM',iv:B(VAULT.iv),additionalData:enc('superviseur')},DK,B(VAULT.ct));
  const p=JSON.parse(new TextDecoder().decode(pt));window.STATIC=p.static;window.APPDATA=p.app;window.SV_VER=VAULT.ver}
 window._svImg=async p=>{if(IMG[p])return IMG[p];const r=await fetch('vault/p-'+String(p).padStart(3,'0')+'.bin?v='+encodeURIComponent(VAULT.ver));if(!r.ok)throw new Error('img');
  const b=new Uint8Array(await r.arrayBuffer());const pt=await crypto.subtle.decrypt({name:'AES-GCM',iv:b.slice(0,12),additionalData:enc('img')},DK,b.slice(12));
  return IMG[p]=URL.createObjectURL(new Blob([pt],{type:'image/webp'}))};
 window.svDownload=(name,data,type)=>{const u=URL.createObjectURL(new Blob([data],{type:type||'application/octet-stream'}));const a=document.createElement('a');a.href=u;a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(u);a.remove()},4000)};
-window.svLock=()=>{try{localStorage.removeItem(KEY)}catch(e){}location.reload()};
+window.__svEnc=async(pt,ad)=>{const iv=crypto.getRandomValues(new Uint8Array(12));const ct=new Uint8Array(await crypto.subtle.encrypt({name:'AES-GCM',iv,additionalData:enc(ad)},DK,pt));return {iv,ct}};
+window.__svDec=async(ct,iv,ad)=>new Uint8Array(await crypto.subtle.decrypt({name:'AES-GCM',iv,additionalData:enc(ad)},DK,ct));
+window.svLock=()=>{try{localStorage.removeItem(KEY);localStorage.removeItem('sv.sync');localStorage.removeItem('sv.base')}catch(e){}location.reload()};
 async function warm(){try{for(let i=1;i<=(VAULT.imgs||100);i++){await fetch('vault/p-'+String(i).padStart(3,'0')+'.bin?v='+encodeURIComponent(VAULT.ver)).catch(()=>{})}}catch(e){}}
 const $=id=>document.getElementById(id);
 function show(msg){$('lock').classList.add('on');if(msg)$('lockmsg').textContent=msg}
@@ -353,9 +359,9 @@ const D=window.APPDATA, S=window.STATIC, PAGES=D.pages;
 const $=s=>document.querySelector(s), view=$('#view');
 const MEM={};
 const lget=(k,d)=>{try{const v=localStorage.getItem('pcs.'+k);if(v!==null)return JSON.parse(v)}catch(e){}return k in MEM?MEM[k]:d};
-const lset=(k,v)=>{MEM[k]=v;try{localStorage.setItem('pcs.'+k,JSON.stringify(v))}catch(e){}};
+const lset=(k,v)=>{MEM[k]=v;try{localStorage.setItem('pcs.'+k,JSON.stringify(v))}catch(e){try{const t=document.getElementById('toast');t.textContent='⚠ Stockage plein : exporte (Réglages) puis vide le journal';t.classList.add('on');setTimeout(()=>t.classList.remove('on'),6000)}catch(_){}}};
 const SK=['favs','vac','tclLvl','annCat','ck','log','lastPage','inc','pce'];
-const store={get:lget,set(k,v){lset(k,v);if(SK.includes(k)){stamp=Math.max(Date.now(),seen+1);schedulePush()}}};
+const store={get:lget,set(k,v){lset(k,v);if(window.__svChanged&&['inc','log','pce','ck','favs','vac','tclLvl','name'].includes(k))window.__svChanged();if(SK.includes(k)){stamp=Math.max(Date.now(),seen+1);schedulePush()}}};
 let remote=null,pushT=null,writing=false,dirty=false,pending=false,stamp=0,seen=0;const pushed=new Set();
 function setSync(s){const e=$('#sync');if(!e)return;e.textContent=s==='ok'?'● Synchro':s==='err'?'● Hors ligne':s==='wait'?'● Connexion…':'● Local';e.className='sync '+s}
 function snapState(){const o={};SK.forEach(k=>{const v=lget(k,undefined);if(v!==undefined)o[k]=v});o._t=Math.max(stamp,seen+1);return o}
@@ -460,6 +466,7 @@ $('#vbody').addEventListener('touchend',e=>{if(tx===null||zoom)return;const dx=e
 function pageRow(d,extra){
  const k=d.kind==='logi'?'<span class="tag" style="background:#3b4a8f">LOGI</span> ':d.kind==='mc'?'<span class="tag" style="background:#56608f">MC</span> ':'';
  return `<div class="row" onclick="_open(${d.p})"><span class="num">${esc(d.id||'')}</span><div class="t"><b>${k}${esc(d.title)}</b><small>${esc(extra||d.sub||'')} · p. ${d.p}</small></div><span style="color:var(--mute)">›</span></div>`}
+function vacKey(){const d=new Date();const h=d.getHours();const s=h>=4&&h<12?'M':h>=12&&h<20?'A':'N';if(h<4)d.setDate(d.getDate()-1);return d.toDateString()+'-'+s}
 function todayInfo(){const d=new Date();const dow=d.getDay(),dom=d.getDate();const j=['Quotidien'];if(dow===2)j.push('Hebdo');if(dom===1)j.push('Mensuel');return j}
 // journal & incidents
 function addLog(t,h){const l=store.get('log',[]);const d=new Date();l.push({h:h||hhmm(d),d:d.toISOString(),t});store.set('log',l)}
@@ -486,7 +493,7 @@ R.home=function(){
   <button class="big b4" onclick="_go('memo')">${I('<path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 19V5"/>')}<b>Mémo</b><span>Réflexes · radio · codes MC · classeur</span></button>
  </div>
  ${open.length?`<h2>Incidents en cours · ${open.length}</h2><div class="incs">${open.map(o=>`<div class="inccard"><div class="it"><span class="dot"></span><div><b>${esc(o.title)}</b><small>${esc(where(o)||'lieu à préciser')} · ${esc((o.f&&o.f.heure)||o.h)}</small></div></div>
-  <div class="ia"><button class="bgo" data-cont="${o.id}"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg>Continuer</button><button class="bstop" data-stop="${o.id}"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M5 12l4 4 10-10"/></svg>Clôturer</button></div></div>`).join('')}</div>`:''}
+  <div class="ia"><button class="bgo" data-cont="${esc(o.id)}"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg>Continuer</button><button class="bstop" data-stop="${esc(o.id)}"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M5 12l4 4 10-10"/></svg>Clôturer</button></div></div>`).join('')}</div>`:''}
  <h2>Compléments</h2>
  <div class="minis">
   <button class="mini" onclick="_go('msg')"><i>TCL</i><span><b>Message TCL</b><small>hors incident</small></span></button>
@@ -494,7 +501,7 @@ R.home=function(){
   <button class="mini" onclick="_go('log')"><i>${logs.length}</i><span><b>Journal de vacation</b><small>notes libres</small></span></button>
   <button class="mini" onclick="_go('check')"><i>✓</i><span><b>Check-lists</b><small>prise de poste, journaux</small></span></button>
  </div>
- ${recent.length?`<h2>Clos récemment</h2><div class="list">${recent.map(o=>`<div class="row" onclick="_go('inc',{id:'${o.id}'})"><div class="t"><b>${esc(o.title)}</b><small>${esc(where(o)||'—')} · clos à ${esc(o.endH||'')}</small></div><span style="color:var(--mute)">›</span></div>`).join('')}</div>`:''}
+ ${recent.length?`<h2>Clos récemment</h2><div class="list">${recent.map(o=>`<div class="row" onclick="_go('inc',{id:'${esc(o.id)}'})"><div class="t"><b>${esc(o.title)}</b><small>${esc(where(o)||'—')} · clos à ${esc(o.endH||'')}</small></div><span style="color:var(--mute)">›</span></div>`).join('')}</div>`:''}
  <div class="discreet"><button onclick="_go('check')">Rappel : journaux PCS ${todayInfo().join(' + ').toLowerCase()} entre 05:00 et 06:00 ›</button></div>
  <div class="foot">Aide-mémoire tiré du classeur v1.7 — la référence reste le Référentiel unique. Diffusion restreinte.</div>`;
  view.querySelectorAll('[data-cont]').forEach(b=>b.onclick=()=>go('inc',{id:b.dataset.cont}));
@@ -643,17 +650,18 @@ const todayIso=()=>{const d=new Date();return d.getFullYear()+'-'+pad(d.getMonth
 function cleanBr(t){let s=(t||'').replace(/\s*→\s*ÉTAPE\s*\d+\s*$/,'').replace(/^ÉTAPE\s*\d+$/,'').replace(/\s*→\s*CL[ÔO]TURE\s*$/,'').replace(/^CL[ÔO]TURE$/,'').trim();return s||'continuer'}
 function mcList(c){const out=[];c.mcs.forEach(id=>{const m=D.mc[id];if(m)m.tpls.forEach((t,i)=>out.push({k:id+'|'+i,id,i,t,m}))});if(!out.length)out.push({k:'FI|0',id:'FI',i:0,t:D.mc.FI.tpls[0],m:D.mc.FI});return out}
 function isOpt(f){const p=f.split(' / ');return p.length>=2&&p.length<=4&&p.every(x=>x.length<=40)}
-function autoVal(f,o){const F=o.f||{};
- if(/HH.?h.?MM/i.test(f))return hhTxt(F);
+function autoVal(f,o,pre){const F=o.f||{};
+ if(/HH.?h.?MM/i.test(f))return /reprise|retour|fin |termin|jusqu|r[ée]ouvert|lev[ée]e/i.test(pre||'')?'':hhTxt(F);
  if(/^(lieu|station|arrêt|arret)$/i.test(f.trim()))return F.arret||'';
- if(isOpt(f)){const p=f.split(' / ');const kw={bus:/bus|véhicule|vehicule|CR\b/i,tram:/tram|rame/i,metro:/métro|metro|rame|quai/i,funi:/métro|metro|rame/i}[F.mode];const hit=kw&&p.find(x=>kw.test(x));return hit||p[0]}
+ if(isOpt(f)){const p=f.split(' / ');const kw={bus:/bus|véhicule|vehicule|CR\b/i,tram:/tram|rame/i,metro:/métro|metro|rame|quai/i,funi:/métro|metro|rame/i}[F.mode];const hit=kw&&p.find(x=>kw.test(x));return hit||''}
  return ''}
-function mcCompose(o,tp){const v=(o.mc&&o.mc.v)||{};let k=0;
- let s=tp.t.text.replace(/\{([^}]*)\}/g,(_,f)=>{const i=k++;const x=(v[i]!=null&&v[i]!=='')?v[i]:autoVal(f,o);return x||('['+f+']')});
+function mcCompose(o,tp){const v=(o.mc&&o.mc.v)||{};let k=0;const src=tp.t.text;
+ let s=src.replace(/\{([^}]*)\}/g,(_,f,off)=>{const i=k++;const x=(v[i]!=null&&v[i]!=='')?v[i]:autoVal(f,o,src.slice(Math.max(0,off-40),off));return x||('['+f+']')});
  const fin=o.mc&&o.mc.fin;if(fin)s=s.replace(/\s*$/,'')+' '+fin.replace('[HH]h[MM]',hhTxt(o.f||{})||'[HH]h[MM]');return s}
 function tclLv(c){const m=c.row&&c.row.tcl.match(/TCL\d/);return m?m[0]:null}
+function incLabel(c){const P=c.logi&&PAGES.find(d=>d.id===c.logi);return P?P.title:(c.row?c.row.n:c.title)}
 function tclCompose(o,c){const t=o.tcl||{};const f=o.f||{};const lv=t.lv||tclLv(c)||'TCL1';const x=(v,ph)=>v||ph;
- return `PCS – ${lv} – Ligne ${x(ligneStr(f),f.mode==='ut'?'—':'______')} – Lieu ${x(lieuStr(f),'____________')} – Incident ${x(t.in||c.title,'____________')} – Conséquences ${x(t.co,'______________')} – Mesures ${x(t.me,'______________')}`}
+ return `PCS – ${lv} – Ligne ${x(ligneStr(f),f.mode==='ut'?'—':'______')} – Lieu ${x(lieuStr(f),'____________')} – Incident ${x(t.in!=null&&t.in!==''?t.in:incLabel(c),'____________')} – Conséquences ${x(t.co,'______________')} – Mesures ${x(t.me,'______________')}`}
 function todoHtml(c,o){const L=c.logi&&LG[c.logi];const lv=tclLv(c);const f=o.f||{};const li=[];
  if(L)L.steps.forEach(s=>{if(s.n==='■')return;
   if(s.q)li.push(`<b>${esc(qText(s.t))}</b><div class="brs">${s.br.map(b=>`<span><i class="k ${b.k}">${b.k}</i> ${esc(cleanBr(b.t))}</span>`).join('')}</div>`);
@@ -673,7 +681,7 @@ function todoHtml(c,o){const L=c.logi&&LG[c.logi];const lv=tclLv(c);const f=o.f|
 function placeHtml(o){const f=o.f||{};const lines=NET.lines[f.mode]||[];const lo=lineObj(f.mode,f.ligne);
  let ligne='',arret='';
  if(f.mode==='bus'){const g={};lines.forEach(l=>(g[l.ut]=g[l.ut]||[]).push(l));
-  ligne=`<select class="f" data-k="ligne"><option value="">— Ligne —</option>${Object.keys(g).sort().map(u=>`<optgroup label="${u}">${g[u].map(l=>`<option value="${l.id}" ${l.id===f.ligne?'selected':''}>${l.id}</option>`).join('')}</optgroup>`).join('')}</select>`;
+  ligne=`<input class="f" data-k="ligne" list="dl-bus" value="${esc(f.ligne||'')}" placeholder="N° de ligne (ex. C25, 86)" autocapitalize="characters"><datalist id="dl-bus">${lines.map(l=>`<option value="${l.id}">${l.ut}</option>`).join('')}</datalist>`;
   arret=`<input class="f" data-k="arret" list="dl-stops" value="${esc(f.arret||'')}" placeholder="Arrêt (nom)">`}
  else if(f.mode==='ut'){ligne=`<select class="f" data-k="ligne"><option value="">— UT —</option>${lines.map(l=>`<option value="${l.id}" ${l.id===f.ligne?'selected':''}>${l.id} · ${esc(l.t)}</option>`).join('')}</select>`;
   arret=lo?`<div class="sub" style="padding:10px 2px">${esc(lo.addr)}</div>`:''}
@@ -684,9 +692,13 @@ function placeHtml(o){const f=o.f||{};const lines=NET.lines[f.mode]||[];const lo
  ${f.mode&&f.mode!=='autre'?`<div class="row2"><div><label class="l">${f.mode==='ut'?'Unité de transport':'Ligne'}</label>${ligne}</div><div>${f.mode==='ut'?'<label class="l">Adresse</label>':`<label class="l">${f.mode==='metro'||f.mode==='funi'?'Station':'Arrêt'}</label>`}${arret}</div></div>`:''}
  <label class="l">${f.mode==='autre'?'Lieu':'Précision du lieu (facultatif)'}</label><input class="f" data-k="prec" value="${esc(f.prec||'')}" placeholder="${f.mode==='autre'?'Adresse, site, secteur…':'Quai direction…, à bord rame n°…, accès n°…'}">
  ${lo&&lo.code?`<div class="hint">Code MC ${lo.code}${NET.chem[f.mode]?' · cheminement '+esc(NET.chem[f.mode]):''}</div>`:''}${f.mode==='bus'&&lo?`<div class="hint">Ligne ${esc(lo.id)} rattachée à ${esc(lo.ut)} · FI : sélectionner la ligne de bus</div>`:''}`}
-function mcHtml(o,c){const L=mcList(c);const cur=L.find(x=>x.k===(o.mc&&o.mc.k))||L[0];const v=(o.mc&&o.mc.v)||{};let k=0;
- const fields=esc(cur.t.text).replace(/\{([^}]*)\}/g,(_,fe)=>{const f=fe.replace(/&#39;/g,"'").replace(/&amp;/g,'&').replace(/&quot;/g,'"');const i=k++;const val=(v[i]!=null&&v[i]!=='')?v[i]:autoVal(f,o);
-   if(isOpt(f))return `<select data-fv="${i}">${f.split(' / ').map(p=>`<option ${p===val?'selected':''}>${esc(p)}</option>`).join('')}</select>`;
+function defTpl(L,o,c){const f=(o.f||{}).mode;const n=c.row?c.row.n:'';
+ const pref=[/colis/i.test(n)?/COLIS/:null,/faux attentats/i.test(n)?/R[ÉE]CEPTION|ALERTE/:null,f==='bus'?/\bBUS\b/:null,(f==='tram'||f==='metro'||f==='funi')?/M[ÉE]TRO|TRAM/:null].filter(Boolean);
+ for(const re of pref){const t=L.find(x=>re.test(x.t.label));if(t)return t}return L[0]}
+function curTpl(L,o,c){return L.find(x=>x.k===(o.mc&&o.mc.k))||defTpl(L,o,c)}
+function mcHtml(o,c){const L=mcList(c);const cur=curTpl(L,o,c);const v=(o.mc&&o.mc.v)||{};let k=0;const src=cur.t.text;const offs=[];src.replace(/\{([^}]*)\}/g,(m,f,off)=>{offs.push(src.slice(Math.max(0,off-40),off));return m});
+ const fields=esc(cur.t.text).replace(/\{([^}]*)\}/g,(_,fe)=>{const f=fe.replace(/&#39;/g,"'").replace(/&amp;/g,'&').replace(/&quot;/g,'"');const i=k++;const val=(v[i]!=null&&v[i]!=='')?v[i]:autoVal(f,o,offs[i]);
+   if(isOpt(f))return `<select data-fv="${i}"><option value="" ${val?'':'selected'}>[à préciser]</option>${f.split(' / ').map(p=>`<option ${p===val?'selected':''}>${esc(p)}</option>`).join('')}</select>`;
    return `<input data-fv="${i}" value="${esc(val)}" placeholder="${esc(f)}" size="${Math.max(6,Math.min(26,f.length+1))}">`}).replace(/\n/g,'<br>');
  const fins=(MCX[cur.id]&&MCX[cur.id].fins)||[];const x=MCX[cur.id]||{};
  return `${L.length>1?`<label class="l" style="margin-top:0">Situation</label><div class="sits">${L.map(t=>`<button class="sit ${t.k===cur.k?'on':''}" data-tpl="${t.k}">${esc(t.t.label.replace(/^([A-D]) · /,'$1 — '))}${c.mcs.length>1?`<small>${esc(D.mc[t.id].title)}</small>`:''}</button>`).join('')}</div>`:`<div class="sub" style="margin-bottom:6px">${esc(cur.t.label)}</div>`}
@@ -697,13 +709,15 @@ function mcHtml(o,c){const L=mcList(c);const cur=L.find(x=>x.k===(o.mc&&o.mc.k))
  <div class="btns"><button class="btn" id="mccp">Copier</button>${o.mc&&o.mc.man?'<button class="btn ghost" id="mcre">Régénérer</button>':''}</div>
  ${cur.m.qualif?`<div class="hint">Qualification : ${esc(cur.m.qualif)}</div>`:''}
  ${x.bp&&x.bp.length?`<details><summary>Bonnes pratiques (${x.bp.length})</summary><ul>${x.bp.map(t=>`<li>${esc(t)}</li>`).join('')}</ul></details>`:''}`}
-function tclHtml2(o,c){const t=o.tcl||{};const lv=t.lv||tclLv(c)||'TCL1';const T=S.tcl[lv];const f=o.f||{};
+function tclHtml2(o,c){const t=o.tcl||{};if(!tclLv(c)&&c.row&&!t.force&&!t.lv)return `<div class="hint warn">Classification : <b>pas de message TCL</b> pour ce fait (fiche 5.1 : sans classement, pas de SMS). À envoyer seulement en cas d'aggravation.</div><div class="btns"><button class="btn ghost" id="tcforce">Rédiger un TCL quand même</button></div>`;
+ const lv=t.lv||tclLv(c)||'TCL1';const T=S.tcl[lv];const f=o.f||{};
  let dl='';if(f.heure){const [h,m]=f.heure.split(':').map(Number);const b=new Date();b.setHours(h,m,0,0);const add=n=>hhmm(new Date(b.getTime()+n*60000));if(T.sms)dl+=`SMS avant <b>${add(T.sms)}</b>`;if(T.mail)dl+=` · mail avant <b>${add(T.mail)}</b>`}
  return `${!tclLv(c)&&c.row?'<div class="hint warn">Classification : pas de message TCL prévu pour ce fait. À envoyer seulement en cas d\'aggravation.</div>':''}
  <div class="seg" style="margin:4px 0 8px">${Object.keys(S.tcl).map(k=>`<button class="${k===lv?'on':''}" data-lv="${k}">${k}</button>`).join('')}</div>
  ${lv==='TCL2'||lv==='TCL3'||lv==='RDL'?`<div class="hint warn" style="margin:0 0 8px">⚠ ${lv} : à rédiger <b>seulement sur instruction de l'astreinte CODIR</b> (fiche 4.1). Niveau proposé, décision CODIR.</div>`:''}
- ${c.cible==='A'&&/TCL3/.test(c.row?c.row.tcl:'')?`<div class="hint" style="margin:0 0 8px">Agent du réseau transporté à l'hôpital : message <b>RDL</b>, toujours doublé d'un <b>TCL3</b> (fiche 4.2).</div>`:''}
+ ${c.cible==='A'&&/TCL3/.test(c.row?c.row.tcl:'')?`<div class="hint" style="margin:0 0 8px"><b>Si</b> l'agent est transporté à l'hôpital : message <b>RDL</b>, toujours doublé d'un <b>TCL3</b> (fiche 4.2).</div>`:''}
  <div class="sub">${esc(T.types)} · <b>${esc(T.val)}</b>${dl?' · '+dl:''}</div>
+  <label class="l">Incident (description courte)</label><input class="f" data-t="in" value="${esc(t.in!=null?t.in:'')}" placeholder="${esc(incLabel(c))}">
  <label class="l">Conséquences</label><input class="f" data-t="co" value="${esc(t.co||'')}" placeholder="Ligne interrompue, retards, véhicule retiré…">
  <label class="l">Mesures</label><input class="f" data-t="me" value="${esc(t.me||'')}" placeholder="SP sur place, SIA missionnée, FDO avisées…">
  <label class="l">Message prêt à copier ${t.man?'<span class="pill">modifié à la main</span>':''}</label>
@@ -730,12 +744,13 @@ function bindFiche(id,c){
  let Z=getInc(id);let sv=null;
  const save=(z,now)=>{clearTimeout(sv);sv=null;if(now)saveInc(z);else sv=setTimeout(()=>{sv=null;saveInc(z)},250)};
  const flush=()=>{clearTimeout(sv);sv=null;saveInc(Z)};window._flushFiche=()=>{if(sv){clearTimeout(sv);sv=null;saveInc(Z)}};
- const upOut=()=>{const z=Z;const mt=$('#mctxt');if(mt&&!(z.mc&&z.mc.man)){const L=mcList(c);const cur=L.find(x=>x.k===(z.mc&&z.mc.k))||L[0];mt.value=mcCompose(z,cur)}
+ const upOut=()=>{const z=Z;const mt=$('#mctxt');if(mt&&!(z.mc&&z.mc.man)){const L=mcList(c);const cur=curTpl(L,z,c);mt.value=mcCompose(z,cur)}
   const tt=$('#tctxt');if(tt&&!(z.tcl&&z.tcl.man))tt.value=tclCompose(z,c)};
  const rer=()=>{flush();renderFiche(getInc(id))};
  // où / quand
  view.querySelectorAll('#fplace [data-k]').forEach(e=>{const ev=e.tagName==='SELECT'?'change':'input';e.addEventListener(ev,()=>{Z.f[e.dataset.k]=e.value;
-  if(e.dataset.k==='ligne'){Z.f.arret=''}
+  if(e.dataset.k==='ligne'&&e.tagName==='SELECT'){Z.f.arret=''}
+  if(e.dataset.k==='ligne'&&e.tagName==='INPUT'){Z.f.ligne=e.value.toUpperCase().replace(/\s/g,'')}
   if(e.tagName==='SELECT'||e.dataset.k==='date'){rer();return}
   save(Z);upOut();if(e.dataset.k==='heure'){$('#ftcl').innerHTML=tclHtml2(Z,c);bindTcl2()}})});
  view.querySelectorAll('[data-mode]').forEach(b=>b.onclick=()=>{if(Z.f.mode===b.dataset.mode)return;Z.f.mode=b.dataset.mode;Z.f.ligne='';Z.f.arret='';rer()});
@@ -750,6 +765,7 @@ function bindFiche(id,c){
  };bindMc();
  // TCL
  function bindTcl2(){
+  const tf=$('#tcforce');if(tf){tf.onclick=()=>{Z.tcl=Z.tcl||{};Z.tcl.force=true;flush();$('#ftcl').innerHTML=tclHtml2(Z,c);bindTcl2()};return}
   view.querySelectorAll('[data-lv]').forEach(b=>b.onclick=()=>{Z.tcl=Z.tcl||{};Z.tcl.lv=b.dataset.lv;flush();$('#ftcl').innerHTML=tclHtml2(Z,c);bindTcl2()});
   view.querySelectorAll('[data-t]').forEach(e=>e.oninput=()=>{Z.tcl=Z.tcl||{};Z.tcl[e.dataset.t]=e.value;save(Z);upOut()});
   const tt=$('#tctxt');tt.oninput=()=>{Z.tcl=Z.tcl||{};Z.tcl.man=true;Z.tcl.txt=tt.value;save(Z)};
@@ -761,7 +777,7 @@ function bindFiche(id,c){
  const ro=$('#freopen');if(ro)ro.onclick=()=>{Z.status='open';delete Z.end;delete Z.endH;flush();renderFiche(getInc(id))};
  const dl=$('#fdel');dl.onclick=()=>{clearTimeout(sv);sv=null;window._flushFiche=null;const prev=getInc(id);store.set('inc',incs().filter(x=>x.id!==id));go('home');snack('Incident supprimé','Annuler',()=>{saveInc(prev);if(cur==='home')R.home()})};
 }
-function newInc(base){const n=new Date();const o=Object.assign({id:n.getTime().toString(36),start:n.toISOString(),h:hhmm(n),status:'open',f:{date:todayIso(),heure:hhmm(n)},mc:{},tcl:{}},base);saveInc(o);go('inc',{id:o.id});return o}
+function newInc(base){const n=new Date();const o=Object.assign({id:n.getTime().toString(36)+Math.random().toString(36).slice(2,6),start:n.toISOString(),h:hhmm(n),status:'open',f:{date:todayIso(),heure:hhmm(n)},mc:{},tcl:{}},base);saveInc(o);go('inc',{id:o.id});return o}
 function openCase(x){const c=ctxFrom(x);const b={isis:x.r,cible:x.cible,logi:c.logi,title:c.title};const vp=window._voicePending;if(vp){window._voicePending=null;b.f={date:todayIso(),heure:vp.f.heure||hhmm(new Date()),mode:vp.f.mode||'',ligne:vp.f.ligne||'',arret:vp.f.arret||'',prec:vp.f.prec||''};b.tcl={co:vp.co,me:vp.me};b.voice={text:vp.text,alt:[],src:'local'}}newInc(b)}
 R.act=function(arg){openCase(arg)};
 let wz={id:null};
@@ -805,72 +821,81 @@ R.voice=function(){
 };
 // ---------- analyse locale (secours)
 const VKW=[
- [/arme|couteau|pistolet|cutter/,/avec armes/],
- [/crach|lacrymo|gaz\b|jet[ée]? (de|d')?.*(sur|contre)/,/contact indirect/],
- [/agress|frapp|coup|tabass|violen|mordu|morsure|gifl|poing|bless[ée] par/,/contact direct/],
- [/menac\w* de mort/,/menaces de mort/],
- [/racis|sexis|religi/,/racistes/],
- [/laser/,/laser/],
- [/arrach|vol[ée]?\b|vol |dérob|derob|pickpocket|volé/,/^Vol/],
- [/\btag|graff/,'TAG'],
- [/dégrad|degrad|vandal|cass[ée]|bris[ée]/,'DEG'],
- [/caillou|pierre|projectile|jet\b/,/Jets de projectile avec bris/],
- [/colis|bagage|sac abandonn|valise/,/colis suspects/],
+ [/(?<![a-zà-ÿ])viol(?![a-zà-ÿ])|viol[ée]e?(?![a-zà-ÿ])/,/Viols ou tentatives de viol sur voyageurs/],
+ [/attouch|frott|touch[a-zéèê]* (les |aux |ses )?fesses|main aux fesses|tripot|pelot/,/Frotteurs/],
+ [/exhib|harc[eè]l|outrage sexiste|film\w* sous la jupe|upskirt/,/Exhibitionnistes/],
+ [/suicide|s'est jet[ée]|se jeter|accident de personne|personne sous (la|le) (rame|m[ée]tro|tram)/,/Suicide/],
+ [/d[ée]c[èe]s|d[ée]c[ée]d|(?<![a-zà-ÿ])mort(?<![a-zà-ÿ])(?! de)/,/Décès/],
+ [/incendie|(?<![a-zà-ÿ])feu(?![a-zà-ÿ])|fum[ée]e|flammes?|br[ûu]l[ée]/,/Incendies ou départ de feu volontaires/],
+ [/(?<![a-zà-ÿ])armes?(?![a-zà-ÿ])|couteau|pistolet|cutter|(?<![a-zà-ÿ])flingue|machette|tournevis/,/avec armes/],
+ [/colis|bagage|sac abandonn|valise abandonn|objet abandonn/,/colis suspects/],
  [/bombe|attentat/,/faux attentats/],
- [/malaise|inconscient|[ée]vanoui/,/Malaise/],
- [/chute|tomb[ée]|bless/,/Malaise/],
- [/accident|collision|percut|accroch[ée]|heurt/,/Accidents de véhicules TCL/],
- [/chien|animal|animaux|chat\b/,/animaux/],
- [/tunnel|sur les voies|descen\w* sur (la|les) voie/,/Descentes/],
- [/intrusion|intrus/,/intrusions sans dégradation/],
- [/fum|cigarette|musique|vocif/,/Fumeurs/],
- [/ivre|alcool|ivresse/,/Ivresse/],
+ [/laser/,/laser/],
+ [/caillou|caillass|pierres?(?![a-zà-ÿ])|projectiles?|(?<![a-zà-ÿ])jets? de|mortier|vitre (cass|bris|[ée]toil)|pare-brise/,/Jets de projectile avec bris/],
+ [/accident|collision|percut|accroch|heurt|carambol|(?<![a-zà-ÿ])choc(?![a-zà-ÿ])/,'ACC'],
+ [/crach|lacrymo|(?<![a-zà-ÿ])gaz(?![a-zà-ÿ])|bomb\w* au poivre|aspers/,/contact indirect/],
+ [/menac\w* de mort/,/menaces de mort/],
+ [/racis|sexis|religi|antis[ée]mit|homophob/,/racistes/],
+ [/rixe|bagarre|baston|[ée]chauffour|r[èe]glement de comptes?/,/Rixes/],
+ [/agress|frapp|(?<![a-zà-ÿ])coups?(?![a-zà-ÿ])|tabass|violen|mordu|morsure|gifl|(?<![a-zà-ÿ])poings?(?![a-zà-ÿ])|tap[ée]|cogn|bless[ée] par|pouss[ée]/,/contact direct/],
+ [/arrach|(?<![a-zà-ÿ])vol[ée]?s?(?![a-zà-ÿ])|(?<![a-zà-ÿ])vol |d[ée]rob|pickpocket|tire-laine|piqu[ée] (son|le|la|sa)/,'VOL'],
+ [/(?<![a-zà-ÿ])tags?(?![a-zà-ÿ])|tagu|graff/,'TAG'],
+ [/d[ée]grad|vandal|cass[ée]|bris[ée]|d[ée]fonc|arrach[ée] (le|la)/,'DEG'],
+ [/malaise|inconscient|[ée]vanoui|perdu connaissance|au sol|ne r[ée]pond plus|convuls|bouge plus/,'MAL'],
+ [/chute|tomb[ée]|bless/,'MAL'],
+ [/chien|animal|animaux|(?<![a-zà-ÿ])chat(?![a-zà-ÿ])|serpent|cheval/,/animaux/],
+ [/tunnel|sur les voies|descen\w* sur (la|les) voie|pi[ée]ton sur (la|les) voie/,/Descentes/],
+ [/intrusion|intrus|escalad/,/intrusions sans dégradation/],
+ [/stup|drogue|(?<![a-zà-ÿ])deal|cannabis|(?<![a-zà-ÿ])shit(?![a-zà-ÿ])|joint|crack|seringue/,/stupéfiants/],
+ [/(?<![a-zà-ÿ])ipm(?![a-zà-ÿ])|ivre|alcool|ivresse|bourr[ée]|alcoolis/,/Ivresse/],
  [/mendi/,/Mendicité/],
- [/squat|sdf|dort /,/Squats/],
- [/rixe|bagarre/,/Rixes/],
- [/suicide|s'est jet|se jeter/,/Suicide/],
- [/surf|accroch\w* (à|a) l'arri/,/tramsurfing/],
- [/stationn|voiture g[êe]nante|v[ée]hicule g[êe]nant|gar[ée] sur/,/Circulations ou stationnements/],
- [/incendie|\bfeu\b|fum[ée]e/,/Incendies ou départ de feu volontaires/],
- [/exhib/,/Exhibitionnistes/],[/attouch|frott/,/Frotteurs/],[/viol\b/,/Viols ou tentatives de viol sur voyageurs/],
- [/stup|drogue|deal|cannabis|shit/,/stupéfiants/],
- [/trottinette|v[ée]lo|skate|gyropode/,/transports personnel/],
- [/alarme|rupteur|arr[êe]t d'urgence/,/Manipulations/],
- [/perdu|[ée]gar[ée]|d[ée]sorient|enfant seul|fugue|alzheimer/,/Assistance à des tiers/],
- [/d[ée]c[èe]s|d[ée]c[ée]d/,/Décès/],
- [/m[ée]dia|journaliste|presse/,/impact médiatique/],
- [/insult|injur|outrage|menac/,null],
- [/interromp|interruption|d[ée]vi[ée]|ligne coup[ée]e|ligne arr[êe]t[ée]e/,/Lignes arrêtées/]];
-const AGT=/chauffeur|conducteur|conductrice|agent|contr[ôo]leur|\bcr\b|\bal\b|\bads\b|\bsia\b|\bdci\b|machiniste/;
-const VOY=/voyageu|usager|passag|client|jeune|femme|homme|personne|dame|monsieur/;
-function localAnalyse(text){const t=text.toLowerCase();const out=[];const agent=AGT.test(t);
- const pick=re=>ISIS.findIndex(r=>re.test(r.n));
+ [/squat|(?<![a-zà-ÿ])sdf(?![a-zà-ÿ])|dort (dans|sur)|campement/,/Squats/],
+ [/surf|accroch\w* (à|a) l'arri|tramsurf/,/tramsurfing/],
+ [/stationn|voiture g[êe]nante|v[ée]hicule g[êe]nant|gar[ée] sur|rod[ée]o/,/Circulations ou stationnements/],
+ [/fum\w* (une )?(cigarette|clope)|(?<![a-zà-ÿ])fume(?![a-zà-ÿ])|cigarette|clope|musique|vocif|crie/,/Fumeurs/],
+ [/trottinette|v[ée]lo|skate|gyropode|hoverboard/,/transports personnel/],
+ [/alarme|rupteur|arr[êe]t d'urgence|poign[ée]e/,/Manipulations/],
+ [/perdu(?![a-zà-ÿ])|perdue|[ée]gar[ée]|d[ée]sorient|enfant seul|fugue|alzheimer/,/Assistance à des tiers/],
+ [/m[ée]dia|journaliste|presse|cam[ée]ra (de )?t[ée]l[ée]/,/impact médiatique/],
+ [/insult|injur|outrage|menac|(?<![a-zà-ÿ])traite(?![a-zà-ÿ])|(?<![a-zà-ÿ])noms? d'oiseau/,null],
+ [/interromp|interruption|d[ée]vi[ée]|ligne coup[ée]e|ligne arr[êe]t[ée]e|panne|bloqu[ée]e?/,/Lignes arrêtées/]];
+const AGT=/chauffeur|conducteur|conductrice|agent|contr[ôo]leu|(?<![a-zà-ÿ])cr(?![a-zà-ÿ])|(?<![a-zà-ÿ])al(?![a-zà-ÿ])|(?<![a-zà-ÿ])ads(?![a-zà-ÿ])|(?<![a-zà-ÿ])sia(?![a-zà-ÿ])|(?<![a-zà-ÿ])dci(?![a-zà-ÿ])|machiniste|r[ée]gulateur|(?<![a-zà-ÿ])ams?(?![a-zà-ÿ])/;
+const VOY=/voyageu|usager|passag|client|jeune|femme|homme|personne|dame|monsieur|enfant|ado|individu/;
+function stripPlaces(t){let x=' '+t.toLowerCase()+' ';ALLSTOPS.slice().sort((a,b)=>b.length-a.length).forEach(s=>{const n=s.toLowerCase();if(n.length>3)x=x.split(n).join(' # ')});return x}
+function localAnalyse(text){const full=text.toLowerCase();const t=stripPlaces(text);const out=[];
+ const victimA=/(chauffeur|conducteur|conductrice|agent|contr[ôo]leu|\bcr\b|\bal\b|machiniste)\w*\s+(s'est fait|a [ée]t[ée]|vient de se faire|se fait|agress|frapp|insult|menac|bless|mordu|cognÉ|cogn)|(agress|frapp|insult|menac|crach|bless|mord)\w*\s+(un |une |le |la |l'|notre )?(chauffeur|conducteur|conductrice|agent|contr[ôo]leu|machiniste|\bcr\b|\bal\b)/.test(full);
+ const agent=victimA||(AGT.test(full)&&!VOY.test(full));
+ const pick=re=>ISIS.findIndex(r=>re.test(r.n));const sp=/sdmis|pompier|\bsp\b|samu|secours|ambulance/.test(full);
  for(const [k,re] of VKW){if(!k.test(t))continue;let i=-1;
   if(re===null)i=agent?pick(/Menaces et outrages sur agents/):pick(/Menaces de violences ou injures/);
+  else if(re==='ACC')i=pick(sp||/bless/.test(t)?/Accidents de véhicules TCL avec intervention/:(/tiers|deux voitures|entre deux/.test(t)?/Accidents de tiers/:/Accidents de véhicules TCL avec blessés légers/));
+  else if(re==='MAL')i=pick(sp?/Malaise.*avec intervention/:/Malaise.*sans intervention/);
+  else if(re==='VOL')i=pick(/agress|arrach|violen|menac|frapp/.test(t)?(agent?/Vol avec violence ou menaces sur agents/:/Vol avec violence ou menaces sur voyageurs/):(agent?/Vols simple sur agents/:/Vols simple sur voyageurs/));
   else if(re==='TAG')i=pick(/rame|bus\b|v[ée]hicule|wagon|voiture/.test(t)?/^Tags sur MR$/:/^Tags sur infrastructures$/);
-  else if(re==='DEG')i=pick(/rame|bus\b|v[ée]hicule|wagon|voiture/.test(t)?/Dégradations volontaires \/ vandalisme sur MR/:/Dégradations volontaires \/ vandalisme sur infrastructures/);
-  else if(re.source==='Malaise')i=pick(/sdmis|pompier|\bsp\b|samu|secours/.test(t)?/Malaise.*avec intervention/:/Malaise.*sans intervention/);
-  else if(re.source==='Accidents de véhicules TCL')i=pick(/sdmis|pompier|\bsp\b|samu|bless/.test(t)?/Accidents de véhicules TCL avec intervention/:/Accidents de véhicules TCL avec blessés légers/);
-  else if(re.source==='^Vol')i=pick(/agress|arrach|violen|menac/.test(t)?(agent?/Vol avec violence ou menaces sur agents/:/Vol avec violence ou menaces sur voyageurs/):(agent?/Vols simple sur agents/:/Vols simple sur voyageurs/));
+  else if(re==='DEG')i=pick(/rame|\bbus\b|v[ée]hicule|wagon|voiture/.test(t)?/Dégradations volontaires \/ vandalisme sur MR/:/Dégradations volontaires \/ vandalisme sur infrastructures/);
   else i=pick(re);
   if(i>=0&&!out.includes(i))out.push(i)}
- return {id:out[0]!=null?out[0]:null,alt:out.slice(1,3),cible:agent?'A':(VOY.test(t)?'V':null),...localPlace(text),consequences:'',mesures:'',src:'local'}}
-function localPlace(text){const f={mode:null,ligne:null,arret:null,prec:null,heure:null};const t=text;let m;
+ let cible=agent?'A':(VOY.test(full)?'V':null);if(out[0]!=null&&/Assistance à des tiers/.test(ISIS[out[0]].n))cible='A';
+ return {id:out[0]!=null?out[0]:null,alt:out.slice(1,3),cible,...localPlace(text),consequences:'',mesures:'',src:'local'}}
+const NUMW={un:1,une:1,deux:2,trois:3,quatre:4,cinq:5,six:6,sept:7,huit:8,neuf:9,dix:10};
+function localPlace(text){const f={mode:null,ligne:null,arret:null,prec:null,heure:null,dayBack:false};let t=text.replace(/\b(t|T)\s+(deux|trois|quatre|cinq|six|sept|neuf|dix|un)\b/g,(m,a,b)=>'T'+NUMW[b]);let m;
  if((m=t.match(/m[ée]tro\s*([abcd])\b|ligne\s+([abcd])\b/i))){f.mode='metro';f.ligne=(m[1]||m[2]).toUpperCase()}
- else if((m=t.match(/\bT\s?(10|[1-79])\b/))){f.mode='tram';f.ligne='T'+m[1]}
+ else if((m=t.match(/\b[tT]\s?(10|[1-79])\b/))){f.mode='tram';f.ligne='T'+m[1]}
  else if(/rh[oô]nexpress|\bRX\b/i.test(t)){f.mode='tram';f.ligne='RX'}
- else if((m=t.match(/\bF\s?([12])\b/))||/funiculaire/i.test(t)){f.mode='funi';f.ligne=m?'F'+m[1]:null}
+ else if((m=t.match(/\b[fF]\s?([12])\b/))||/funiculaire|ficelle/i.test(t)){f.mode='funi';f.ligne=m?'F'+m[1]:null}
  else if(/navig[oô]ne|navette fluviale/i.test(t)){f.mode='navi';f.ligne='NAV1'}
- else{const ids=NET.lines.bus.map(l=>l.id);
-  for(const id of ids.slice().sort((a,b)=>b.length-a.length)){const re=new RegExp('(?:ligne|bus|la)\\s*'+id.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'\\b','i');const re2=/^[A-Z]/.test(id)?new RegExp('\\b'+id+'\\b','i'):null;
-   if(re.test(t)||(re2&&re2.test(t))){f.mode='bus';f.ligne=id;break}}
-  if(!f.mode&&/\bbus\b/i.test(t))f.mode='bus'}
- const n=norm(t);const lo=f.ligne&&lineObj(f.mode,f.ligne);
+ else if((m=t.match(/(?:ligne|bus|le|du|la)\s*((?:tb|br|brf|c|j|jd|pl|zi|gm|s)\s?\d{1,3}e?|\d{1,3}e?)\b/i))&&(!/^\d{1,2}$/.test(m[1])||/chauffeur|conducteur|machiniste|\bbus\b/i.test(t))||((m=t.match(/(?:ligne|bus)\s*(\d{1,3}e?)\b/i)))){f.mode='bus';f.ligne=m[1].toUpperCase().replace(/\s/g,'')}
+ else if(/\bbus\b|chauffeur|machiniste|trolley/i.test(t))f.mode='bus';
+ const n=norm(t.replace(/\b(vers|à|a)\s+\d{1,2}\s?[h:]\s?\d{0,2}/gi,' '));const lo=f.ligne&&lineObj(f.mode,f.ligne);
  const pool=lo&&lo.stops?lo.stops:ALLSTOPS;let best=null;
  pool.forEach(s=>{if(n.includes(norm(s))&&(!best||s.length>best.length))best=s});
+ if(!best){const part=[];pool.forEach(s=>{const w=norm(s).split(/\s+/).filter(x=>x.length>3);if(w.length&&w.every(x=>n.includes(x)))part.push(s)});if(part.length===1)best=part[0]}
  if(best){if(f.mode){f.arret=best}else{const L=[].concat(...['tram','metro','funi','navi'].map(md=>NET.lines[md].filter(l=>l.stops.includes(best)).map(l=>[md,l])));if(L.length===1){f.mode=L[0][0];f.ligne=L[0][1].id;f.arret=best}else{f.mode='autre';f.prec=best}}}
- if(!f.arret&&(m=t.match(/(?:à l'arr[êe]t|arr[êe]t|station|à hauteur d[eu]|au niveau d[eu]|devant|vers)\s+([^,.;]{3,60})/i)))f.arret=m[1].trim();
- if((m=t.match(/\b([01]?\d|2[0-3])\s?(?:h|:)\s?([0-5]\d)?\b/)))f.heure=pad(+m[1])+':'+(m[2]||'00');
+ if(!f.arret&&!f.prec&&(m=t.match(/(?:à l'arr[êe]t|arr[êe]t|station|à hauteur d[eu]|au niveau d[eu]|devant)\s+([^,.;]{3,60})/i))){let a=m[1].replace(/\s+(vers|à|a)\s+\d{1,2}\s?[h:].*$/i,'').replace(/\s+il y a .*$/i,'').trim();if(a)f.arret=a}
+ const now=new Date();
+ if((m=t.match(/il y a\s+(\d{1,3}|une?|deux|trois|quatre|cinq|dix)\s*(min|minutes?|h|heures?)\b/i))){const q=isNaN(+m[1])?NUMW[m[1].toLowerCase()]||1:+m[1];const d=new Date(now.getTime()-q*(/^h/i.test(m[2])?3600000:60000));f.heure=pad(d.getHours())+':'+pad(d.getMinutes());if(d.toDateString()!==now.toDateString())f.dayBack=true}
+ else if((m=t.match(/\b([01]?\d|2[0-3])\s?(?:h|:)\s?([0-5]\d)?\b/))){f.heure=pad(+m[1])+':'+(m[2]||'00');const [hh,mm]=f.heure.split(':').map(Number);if(hh*60+mm>now.getHours()*60+now.getMinutes()+30)f.dayBack=true}
+ else if(/minuit et quart/i.test(t)){f.heure='00:15'}else if(/minuit/i.test(t)){f.heure='00:00'}
  return f}
 // ---------- analyse Claude
 function netTxt(){const L=NET.lines;return `bus (lignes) : ${L.bus.map(l=>l.id).join(', ')}
@@ -920,12 +945,12 @@ function cleanResult(a,text){const f={};const M=NET.modes.map(x=>x[0]);
  const cible=a.cible==='A'||a.cible==='V'?a.cible:null;
  f.mode=M.includes(a.mode)?a.mode:null;
  if(f.mode&&a.ligne){const lo=(NET.lines[f.mode]||[]).find(l=>norm(l.id)===norm(String(a.ligne).replace(/\s/g,'')));f.ligne=lo?lo.id:null;
-  if(!lo&&f.mode==='bus')f.ligne=null}
+  if(!lo&&f.mode==='bus')f.ligne=String(a.ligne).toUpperCase().replace(/\s/g,'')}
  const lo=f.ligne&&lineObj(f.mode,f.ligne);
  if(a.arret){const s=String(a.arret);if(lo&&lo.stops){const hit=lo.stops.find(x=>norm(x)===norm(s));if(hit)f.arret=hit;else f.prec=s}else f.arret=s}
  if(a.prec)f.prec=[f.prec,String(a.prec)].filter(Boolean).join(' – ');
  if(f.mode==='autre'&&f.arret){f.prec=[f.arret,f.prec].filter(Boolean).join(' – ');f.arret=''}
- f.heure=/^([01]\d|2[0-3]):[0-5]\d$/.test(a.heure||'')?a.heure:null;
+ f.heure=/^([01]\d|2[0-3]):[0-5]\d$/.test(a.heure||'')?a.heure:null;f.dayBack=!!a.dayBack;
  return {id,alt,cible,f,co:String(a.consequences||'').slice(0,200),me:String(a.mesures||'').slice(0,200),src:a.src}}
 async function voiceGo(){
  const text=($('#vtext').value||'').trim();const res=$('#vres');
@@ -941,7 +966,7 @@ async function voiceGo(){
   $('#vtree').onclick=()=>{window._voicePending={text,f:r.f,co:r.co,me:r.me};go('isis',{p:[]})};return}
  const row=ISIS[r.id];let cible=r.cible;if(cible&&!(row.m&&row.m[cible]))cible=null;
  const now=new Date();
- const base={isis:r.id,cible:cible||(row.c==='A'?'A':row.c==='V'?'V':row.c==='-'?'-':'A/V'),f:{date:todayIso(),heure:r.f.heure||hhmm(now),mode:r.f.mode||'',ligne:r.f.ligne||'',arret:r.f.arret||'',prec:r.f.prec||''},tcl:{co:r.co,me:r.me},mc:{},voice:{text,alt:r.alt,src:r.src}};
+ const base={isis:r.id,cible:cible||(row.c==='A'?'A':row.c==='V'?'V':row.c==='-'?'-':'A/V'),f:{date:r.f.dayBack?(()=>{const d=new Date(now.getTime()-864e5);return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())})():todayIso(),heure:r.f.heure||hhmm(now),mode:r.f.mode||'',ligne:r.f.ligne||'',arret:r.f.arret||'',prec:r.f.prec||''},tcl:{co:r.co,me:r.me},mc:{},voice:{text,alt:r.alt,src:r.src}};
  const c=ctxFrom(base);base.logi=c.logi;base.title=c.title;
  if(r.src==='ia'){btn.textContent='Rédaction de la main courante…';
   try{const fl=await Promise.race([aiFill(base,c,text),new Promise((_,rj)=>setTimeout(()=>rj(new Error('délai')),30000))]);
@@ -975,7 +1000,7 @@ R.pce=function(){
   ${p?`<h2>Dernier PC</h2><div class="card"><b>${esc(p.label)}</b>${p.ev?' · '+esc(p.ev):''}<div class="sub">${esc(p.h)} → ${esc(p.endH||'')}</div></div>`:''}
   <div class="list" style="margin-top:10px">${[40,41,42].map(n=>pageRow(PAGES[n-1])).join('')}</div>`;
   view.querySelectorAll('[data-i]').forEach(b=>b.onclick=()=>{const i=+b.dataset.i;const n=new Date();const ev=$('#pev').value.trim();
-   const np={id:n.getTime().toString(36),type:i?'PCC':'PCE',label:PC.decl[i][1],ev,start:n.toISOString(),h:hhmm(n),ck:{},notes:[],status:'open'};
+   const np={id:n.getTime().toString(36)+Math.random().toString(36).slice(2,6),type:i?'PCC':'PCE',label:PC.decl[i][1],ev,start:n.toISOString(),h:hhmm(n),ck:{},notes:[],status:'open'};
    store.set('pce',np);addLog('Ouverture '+np.label+(ev?' — '+ev:''));pt=1;R.pce();window.scrollTo(0,0)});
   return}
  const ck=p.ck||{};const cb=(k,txt,sub)=>`<label class="ck ${ck[k]?'done':''}"><input type="checkbox" data-k="${k}" ${ck[k]?'checked':''}><span>${esc(txt)}${sub&&sub.length?`<small style="display:block;color:var(--mute);margin-top:3px">${sub.map(esc).join('<br>')}</small>`:''}</span></label>`;
@@ -992,10 +1017,10 @@ R.pce=function(){
   <button class="btn ghost sm" style="margin-top:8px" id="pcp">Copier la main courante du PC</button>`}
  if(pt===4)body=`<h2>Envoyer la main courante · fermer <span class="pill">${cnt('c')}/${PC.clot.length}</span></h2><div class="list">${PC.clot.map((t,i)=>cb('c'+i,(i+1)+'. '+t)).join('')}</div>
   <div class="list" style="margin-top:10px">${pageRow(PAGES[41])}</div>
-  <div class="card closebox"><b>Clôturer le ${esc(p.label)}</b><label class="l">Heure de clôture</label><input class="f" id="pch" type="time" value="${hhmm(new Date())}" style="max-width:160px">
+  <div class="card closebox"><b>Clôturer le ${esc(p.label)}</b><label class="l">Heure de clôture</label><input class="f" id="pch" type="time" value="" style="max-width:160px"><div class="sub">Vide = heure actuelle au moment de la clôture</div>
   <button class="btn red" id="pclose" style="width:100%;margin-top:12px;padding:14px">Confirmer la clôture</button></div>`;
  view.innerHTML=` <div class="inchead" style="margin-top:10px"><div><div class="sub">ouvert à <span class="mono">${esc(p.h)}</span> · ${esc(PC.team)} · <b class="mono" style="color:var(--acc)">${esc(PC.ind)}</b></div><h1>${esc(p.label)}</h1>${p.ev?`<div class="sub">${esc(p.ev)}</div>`:''}</div>
- <div style="text-align:right"><div class="timer" data-since="${p.start}">${since(p.start)}</div><div class="sub">depuis l'ouverture</div></div></div>
+ <div style="text-align:right"><div class="timer" data-since="${esc(p.start)}">${since(p.start)}</div><div class="sub">depuis l'ouverture</div></div></div>
  <div class="steps">${[[1,'Ouverture'],[2,'Teams'],[3,'Main courante'],[4,'Clôture']].map(([i,s])=>`<button class="${i===pt?'on':''}" data-s="${i}"><b>${i}</b>${s}</button>`).join('')}</div>${body}`;
  view.querySelectorAll('.steps [data-s]').forEach(b=>b.onclick=()=>{pt=+b.dataset.s;R.pce();window.scrollTo(0,0)});
  view.querySelectorAll('.ck input').forEach(i=>i.onchange=()=>{const z=store.get('pce');z.ck=z.ck||{};z.ck[i.dataset.k]=i.checked;store.set('pce',z);R.pce()});
@@ -1088,13 +1113,87 @@ R.memo=function(){
  <div class="bgrid" style="margin-top:12px">${it.map(([k,c,t,d,ic])=>`<button class="bb" style="--c:${c};min-height:130px" onclick="_go('${k}')">${svgI(ic)}<b>${t}</b><span>${d}</span></button>`).join('')}</div>
  ${fv.length?`<h2>Favoris</h2><div class="list">${fv.map(p=>pageRow(PAGES[p-1])).join('')}</div>`:''}`;
 };
+// ================= SYNCHRONISATION (GitHub privé, chiffré de bout en bout)
+const GH={file:'superviseur-sync.json'};
+const SYNCK=['inc','log','pce','ck','favs','vac','tclLvl','name'];
+const ghCfg=()=>{try{return JSON.parse(localStorage.getItem('sv.sync')||'null')}catch(e){return null}};
+let syncBusy=false,syncTimer=null,syncState='off',syncLast=lget('syncLast',null);
+function syncUi(){const b=$('#syncbtn');if(!b)return;const c=ghCfg();
+ b.className='iconbtn syncb '+(syncBusy?'busy':!c?'off':syncState);
+ b.innerHTML=`<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 0 0-14.6-4.5L4 8M4 4v4h4M4 13a8 8 0 0 0 14.6 4.5L20 16M20 20v-4h-4"/></svg><span>${syncBusy?'Synchro…':!c?'Synchro':syncState==='err'?'Échec':'Synchro'}</span>`;
+ b.title=!c?'Configurer la synchronisation':syncLast?'Dernière synchro : '+new Date(syncLast).toLocaleString('fr-FR'):'Synchroniser'}
+const keyOf={inc:x=>x.id,log:x=>x.d+'|'+x.t};
+function merge3(base,loc,rem){const out={};
+ for(const k of SYNCK){const b=base[k],l=loc[k],r=rem[k];
+  if(k==='inc'||k==='log'){const kf=keyOf[k];const M=a=>new Map((a||[]).map(x=>[kf(x),x]));const B=M(b),L=M(l),Rm=M(r);const res=new Map();
+   for(const [id,x] of L){if(Rm.has(id)){const y=Rm.get(id);res.set(id,k==='inc'&&(y.u||0)>(x.u||0)?y:x)}else if(!B.has(id))res.set(id,x)}
+   for(const [id,y] of Rm){if(!L.has(id)&&!B.has(id))res.set(id,y)}
+   let arr=[...res.values()];if(k==='log')arr.sort((a,c)=>a.d<c.d?-1:a.d>c.d?1:0);if(arr.length||l!==undefined||r!==undefined)out[k]=arr}
+  else{const sb=JSON.stringify(b),sl=JSON.stringify(l),sr=JSON.stringify(r);const v=sl===sb?r:(sr===sb?l:l);if(v!==undefined)out[k]=v}}
+ return out}
+async function ghReq(c,method,body){const r=await fetch(`https://api.github.com/repos/${c.repo}/contents/${GH.file}`,{method,cache:'no-store',
+  headers:{'Authorization':'Bearer '+c.token,'Accept':'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28'},body:body?JSON.stringify(body):undefined});
+ return r}
+const u8b64=b=>{let s='';const a=new Uint8Array(b);for(let i=0;i<a.length;i+=8192)s+=String.fromCharCode.apply(null,a.subarray(i,i+8192));return btoa(s)};
+const b64u8=s=>Uint8Array.from(atob(s.replace(/\s/g,'')),c=>c.charCodeAt(0));
+async function syncNow(manual){const c=ghCfg();if(!c){if(manual)go('settings');return}
+ if(syncBusy)return;if(!navigator.onLine){syncState='err';syncUi();if(manual)toast('Pas de réseau : synchro plus tard');return}
+ syncBusy=true;syncUi();if(window._flushFiche){window._flushFiche()}
+ try{for(let attempt=0;attempt<3;attempt++){
+   let rem={},sha=null;const g=await ghReq(c,'GET');
+   let fresh=false;
+   if(g.status===200){const j=await g.json();sha=j.sha;let cnt=j.content;
+    if(!cnt||j.encoding==='none'){const bl=await fetch(`https://api.github.com/repos/${c.repo}/git/blobs/${j.sha}`,{cache:'no-store',headers:{'Authorization':'Bearer '+c.token,'Accept':'application/vnd.github+json'}});if(!bl.ok)throw new Error('GitHub '+bl.status);cnt=(await bl.json()).content}
+    const box=JSON.parse(new TextDecoder().decode(b64u8(cnt)));
+    try{rem=JSON.parse(new TextDecoder().decode(await window.__svDec(b64u8(box.ct),b64u8(box.iv),'sync')))}catch(e){rem={};fresh=true;toast('Fichier de synchro d\'une ancienne clé : il va être remplacé')}}
+   else if(g.status===404){fresh=true}
+   else throw new Error(g.status===401?'jeton refusé':g.status===403?'accès refusé':'GitHub '+g.status);
+   const loc={};SYNCK.forEach(k=>{const v=lget(k,undefined);if(v!==undefined)loc[k]=v});
+   const base=fresh?{}:JSON.parse(localStorage.getItem('sv.base')||'{}');
+   const m=merge3(base,loc,rem);
+   const same=JSON.stringify(m)===JSON.stringify(rem);
+   if(!same||!sha){const {iv,ct}=await window.__svEnc(new TextEncoder().encode(JSON.stringify(m)),'sync');
+    const content=btoa(JSON.stringify({v:1,t:new Date().toISOString(),iv:u8b64(iv),ct:u8b64(ct)}));
+    const p=await ghReq(c,'PUT',Object.assign({message:'synchro '+new Date().toISOString(),content},sha?{sha}:{}));
+    if(p.status===409||p.status===422){continue}
+    if(!(p.status===200||p.status===201))throw new Error(p.status===401?'jeton refusé':p.status===403||p.status===404?'droits insuffisants sur le dépôt':'GitHub '+p.status)}
+   const now={};SYNCK.forEach(k=>{const v=lget(k,undefined);if(v!==undefined)now[k]=v});
+   const fin=JSON.stringify(now)===JSON.stringify(loc)?m:merge3(loc,now,m);
+   SYNCK.forEach(k=>{if(k in fin)lset(k,fin[k])});favs.clear();(lget('favs',[])||[]).forEach(p=>favs.add(p));
+   try{localStorage.setItem('sv.base',JSON.stringify(m))}catch(e){}syncLast=Date.now();if(fin!==m)window.__svChanged();lset('syncLast',syncLast);syncState='ok';
+   if(manual)toast('Synchronisé');refresh();return}
+  throw new Error('conflit répété')}
+ catch(e){syncState='err';if(manual)toast('Synchro impossible : '+(e.message||e))}
+ finally{syncBusy=false;syncUi()}}
+window.__svChanged=()=>{if(!ghCfg())return;clearTimeout(syncTimer);syncTimer=setTimeout(()=>syncNow(false),8000)};
+window.addEventListener('online',()=>{if(ghCfg())syncNow(false)});
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&ghCfg())syncNow(false)});
+function syncSettingsHtml(){const c=ghCfg()||{};return `<h2>Synchronisation iPhone ↔ ordinateur</h2><div class="card">
+ <div class="sub">Tes incidents, ton journal et tes check-lists sont chiffrés avec la clé de l'appli, puis déposés dans <b>ton</b> dépôt GitHub privé : il faut à la fois ton jeton et un code d'accès pour les lire.</div>
+ <label class="l">Dépôt privé (compte/nom)</label><input class="f" id="ghrepo" value="${esc(c.repo||'')}" placeholder="ton-pseudo/superviseur-data" autocapitalize="none" autocomplete="off">
+ <label class="l">Jeton d'accès GitHub</label><input class="f" id="ghtok" type="password" value="${esc(c.token||'')}" placeholder="github_pat_…" autocapitalize="none" autocomplete="off">
+ <div class="btns"><button class="btn" id="ghsave">Enregistrer et synchroniser</button>${c.repo?'<button class="btn ghost" id="ghoff">Désactiver</button>':''}</div>
+ <div class="sub" style="margin-top:8px">${syncLast?'Dernière synchro : '+esc(new Date(syncLast).toLocaleString('fr-FR')):'Jamais synchronisé.'}</div>
+ <details><summary>Comment créer le dépôt et le jeton (5 min, une seule fois)</summary><ol>
+ <li>github.com → <b>New repository</b> → nom <b>superviseur-data</b> → <b>Private</b> → Create.</li>
+ <li>Photo de profil → <b>Settings → Developer settings → Personal access tokens → Fine-grained tokens → Generate new token</b>.</li>
+ <li>Repository access : <b>Only select repositories</b> → superviseur-data. Permissions : <b>Contents : Read and write</b>. Expiration : 1 an.</li>
+ <li>Copie le jeton, colle-le ici sur chaque appareil (iPhone et ordinateur), avec le même dépôt.</li></ol></details></div>`}
+function bindSyncSettings(){const s=$('#ghsave');if(!s)return;
+ s.onclick=()=>{const repo=$('#ghrepo').value.trim().replace(/^https?:\/\/github\.com\//,'').replace(/\.git$/,'').replace(/\/$/,'');const token=$('#ghtok').value.trim();
+  if(!/^[\w.-]+\/[\w.-]+$/.test(repo)){toast('Dépôt au format compte/nom');return}if(token.length<20){toast('Jeton incomplet');return}
+  const old=ghCfg();if(!old||old.repo!==repo)localStorage.removeItem('sv.base');
+  localStorage.setItem('sv.sync',JSON.stringify({repo,token}));syncUi();syncNow(true)};
+ const o=$('#ghoff');if(o)o.onclick=()=>{localStorage.removeItem('sv.sync');localStorage.removeItem('sv.base');syncState='off';syncUi();R.settings()}}
+
 R.settings=function(){
  const keys=['inc','log','pce','ck','favs','vac','tclLvl','name','dark'];
  view.innerHTML=`<h1>Réglages</h1>
  <div class="card"><label class="l" style="margin-top:0">Ton nom ou indicatif (affiché sur l'accueil)</label><input class="f" id="sname" value="${esc(lget('name',''))}" placeholder="Ex. : ton indicatif radio"></div>
- <h2>Sauvegarde</h2><div class="card"><div class="sub">Tes incidents, ton journal et tes check-lists restent sur cet appareil. Pour passer de l'iPhone à l'ordinateur, exporte ici puis importe sur l'autre appareil.</div>
+ <h2>Sauvegarde</h2><div class="card"><div class="sub">Tes incidents, ton journal et tes check-lists restent sur cet appareil. Sans synchronisation GitHub, tu peux aussi exporter ici puis importer sur l'autre appareil.</div>
   <div class="btns"><button class="btn" id="sexp">Exporter mes données</button><label class="btn ghost" style="display:inline-grid;place-items:center;cursor:pointer">Importer<input type="file" id="simp" accept=".json,application/json" style="display:none"></label></div></div>
- <h2>Sécurité</h2><div class="card"><div class="sub">Le contenu du classeur est chiffré. Verrouiller efface la clé de cet appareil : le code d'accès sera redemandé.</div><div class="btns"><button class="btn red" id="slock">Verrouiller l'appli</button></div></div>
+ ${syncSettingsHtml()}
+ <h2>Sécurité</h2><div class="card"><div class="sub">Le contenu du classeur est chiffré. Verrouiller efface de cet appareil la clé et le jeton de synchronisation : le code d'accès sera redemandé.</div><div class="btns"><button class="btn red" id="slock">Verrouiller l'appli</button></div></div>
  <h2>Version</h2><div class="card"><div class="kv"><b>Données</b><span class="mono">${esc(window.SV_VER||'')}</span><b>Mode</b><span>${navigator.serviceWorker&&navigator.serviceWorker.controller?'installée · fonctionne hors ligne':'en ligne'}</span></div>
   <div class="btns"><button class="btn ghost" id="supd">Rechercher une mise à jour</button></div></div>`;
  $('#sname').oninput=e=>{lset('name',e.target.value.trim())};
@@ -1102,7 +1201,7 @@ R.settings=function(){
  $('#simp').onchange=e=>{const f=e.target.files[0];if(!f)return;f.text().then(t=>{const o=JSON.parse(t);if(o.app!=='superviseur'||!o.data)throw 0;
    const I=mergeInc(lget('inc',[]),o.data.inc||[]);const L=mergeLog(lget('log',[]),o.data.log||[]);
    keys.forEach(k=>{if(k in o.data&&!['inc','log'].includes(k))lset(k,o.data[k])});lset('inc',I);lset('log',L);toast('Données importées');go('home',null,{reset:1})}).catch(()=>toast('Fichier non reconnu'))};
- $('#slock').onclick=()=>svLock();
+ $('#slock').onclick=()=>svLock();bindSyncSettings();
  $('#supd').onclick=async()=>{try{const r=await navigator.serviceWorker.getRegistration();if(r)await r.update();toast('Mise à jour… redémarrage');setTimeout(()=>location.reload(),900)}catch(e){location.reload()}};
 };
 
@@ -1208,26 +1307,28 @@ R.radio=function(){
  </div></div>`;
 };
 // ================= VACATION
+let logMax=150;
 R.log=function(){
  const l=store.get('log',[]);
  view.innerHTML=seg('log','log')+`<div class="card"><textarea class="f" id="lt" placeholder="Ce qui se passe… (Entrée = ajouter, Maj+Entrée = retour à la ligne)"></textarea>
  <div style="display:flex;gap:8px;margin-top:8px;align-items:center;flex-wrap:wrap"><input class="f" id="lh" type="time" style="width:130px"><button class="btn" id="ladd">Ajouter</button>
  <span style="flex:1"></span><button class="btn ghost sm" id="lcp">Tout copier</button><button class="btn ghost sm" id="ldl" style="display:none">Exporter .txt</button><button class="btn ghost sm" id="lclr">Nouvelle vacation</button></div></div>
- <div class="sub" style="margin:8px 2px">Synchronisé entre ton téléphone et ton ordinateur. Utile aussi en mode dégradé (fiche 3.4).</div>
- <div class="list" id="ll">${l.length?l.slice().reverse().map((x,ri)=>{const i=l.length-1-ri;return `<div class="log"><span class="h">${esc(x.h)}</span><span class="x">${esc(x.t)}</span><button data-i="${i}" title="Copier">⧉</button><button data-d="${i}" title="Supprimer">✕</button></div>`}).join(''):'<div class="empty">Aucune note pour cette vacation.</div>'}</div>`;
+ <div class="sub" style="margin:8px 2px">Notes libres de la vacation. Utile aussi en mode dégradé (fiche 3.4).</div>
+ <div class="list" id="ll">${l.length?l.slice().reverse().slice(0,logMax).map((x,ri)=>{const i=l.length-1-ri;return `<div class="log"><span class="h">${esc(x.h)}</span><span class="x">${esc(x.t)}</span><button data-i="${i}" title="Copier">⧉</button><button data-d="${i}" title="Supprimer">✕</button></div>`}).join(''):'<div class="empty">Aucune note pour cette vacation.</div>'}</div>${l.length>logMax?`<button class="btn ghost" style="width:100%;margin-top:8px" id="lmore">Afficher plus (${l.length-logMax} notes plus anciennes)</button>`:''}`;
+ const lm=$('#lmore');if(lm)lm.onclick=()=>{logMax+=200;R.log()};
  $('#lh').value=hhmm(new Date());
  const add=()=>{const t=$('#lt').value.trim();if(!t)return;addLog(t,$('#lh').value||null);R.log();$('#lt').focus()};
  $('#ladd').onclick=add;$('#lt').onkeydown=e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();add()}};
  const all=()=>store.get('log',[]).map(x=>x.h+'  '+x.t).join('\n');
  $('#lcp').onclick=()=>copy(all());
  {const b=$('#ldl');b.style.display='';b.onclick=()=>{const d=new Date();svDownload(`vacation_${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}_${pad(d.getHours())}h${pad(d.getMinutes())}.txt`,all(),'text/plain')}}
- $('#lclr').onclick=e=>{const b=e.currentTarget;if(b.dataset.c){store.set('log',[]);store.set('inc',incs().filter(x=>x.status==='open'));R.log();toast('Nouvelle vacation')}else{b.dataset.c='1';b.textContent='Confirmer : tout effacer ?';b.classList.add('confirm');setTimeout(()=>{if(b.isConnected){delete b.dataset.c;b.textContent='Nouvelle vacation';b.classList.remove('confirm')}},4000)}};
+ $('#lclr').onclick=e=>{const b=e.currentTarget;if(b.dataset.c){store.set('log',[]);R.log();toast('Journal vidé · les incidents sont conservés')}else{b.dataset.c='1';b.textContent='Confirmer : tout effacer ?';b.classList.add('confirm');setTimeout(()=>{if(b.isConnected){delete b.dataset.c;b.textContent='Nouvelle vacation';b.classList.remove('confirm')}},4000)}};
  view.querySelectorAll('#ll [data-i]').forEach(b=>b.onclick=()=>{const x=store.get('log',[])[+b.dataset.i];copy(x.h+'  '+x.t)});
  view.querySelectorAll('#ll [data-d]').forEach(b=>b.onclick=()=>{const l=store.get('log',[]);l.splice(+b.dataset.d,1);store.set('log',l);R.log()});
 };
 R.check=function(){
- const day=new Date().toDateString();let st=store.get('ck',{});if(st._d!==day){st={_d:day}}
- view.innerHTML=seg('log','check')+`<div class="sub" style="margin-bottom:4px">Les cases se remettent à zéro chaque jour. Aujourd'hui : journal ${todayInfo().join(' + ').toLowerCase()} entre 05:00 et 06:00.</div>
+ const day=vacKey();let st=store.get('ck',{});if(st._d!==day){st={_d:day}}
+ view.innerHTML=seg('log','check')+`<div class="sub" style="margin-bottom:4px">Les cases se remettent à zéro à chaque vacation (04h · 12h · 20h). Aujourd'hui : journal ${todayInfo().join(' + ').toLowerCase()} entre 05:00 et 06:00.</div>
  <div class="cols">${[0,1].map(c=>`<div>${Object.entries(S.checklists).filter((_,i)=>i%2===c).map(([k,cl])=>{const n=cl.items.filter((_,i)=>st[k+i]).length;return `<h2>${esc(cl.t)} <span class="pill">${n}/${cl.items.length}</span></h2><div class="list">${cl.items.map((it,i)=>{const on=st[k+i];return `<label class="ck ${on?'done':''}"><input type="checkbox" data-k="${k+i}" ${on?'checked':''}><span>${esc(it)}</span></label>`}).join('')}
  <div class="row" onclick="_open(${cl.p})"><div class="t"><small>Ouvrir la fiche · p. ${cl.p}</small></div><span>›</span></div></div>
  <button class="btn ghost sm" style="margin-top:6px" data-r="${k}">Tout décocher</button>`}).join('')}</div>`).join('')}</div>`;
@@ -1261,8 +1362,9 @@ function search(raw){
 }
 let stq=null;$('#q').addEventListener('input',e=>{clearTimeout(stq);const v=e.target.value;stq=setTimeout(()=>search(v),120)});
 document.addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.key==='k'){e.preventDefault();$('#q').focus()}});
+(()=>{const l=lget('log',[]);const lim=new Date(Date.now()-90*864e5).toISOString();const k=l.filter(x=>!x.d||x.d>=lim);if(k.length<l.length)lset('log',k)})();
 go('home');
-syncInit();
+$('#syncbtn').onclick=()=>syncNow(true);syncUi();if(ghCfg())setTimeout(()=>syncNow(false),1200);
 }
 </script>
 </body>

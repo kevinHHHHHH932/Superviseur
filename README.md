@@ -6,7 +6,7 @@ Assistant du superviseur PC Sécurité TCL : déclaration et fiche incident (fam
 
 - **Contenu chiffré** : le contenu du classeur (annuaire, fiches, pages) est chiffré en AES-256-GCM dans le dossier `vault/`. Sans code d'accès, il est illisible, même si le dépôt est public.
 - **Codes d'accès** : chaque code est transformé en clé par PBKDF2-SHA256 (310 000 itérations). Les codes ne sont stockés nulle part en clair.
-- **Rien ne sort de l'appareil** : aucune requête vers un autre site, pas de statistiques, pas d'IA en ligne. Incidents, journal et check-lists restent sur l'appareil.
+- **Rien ne sort de l'appareil**, sauf la synchronisation vers ton propre dépôt GitHub privé si tu l'actives (données chiffrées). Pas de statistiques, pas d'IA en ligne.
 - **Hors ligne** : après la première ouverture, l'appli fonctionne sans réseau.
 - **Ce qui reste visible publiquement** : le code de l'appli et les **noms des codes** (pas les codes) dans `vault/vault.json`. Utilise des initiales ou des pseudos.
 
@@ -40,7 +40,7 @@ Ouvre `https://TON-PSEUDO.github.io/superviseur/admin.html` avec ton code.
 
 ## Limites
 
-- **Pas de synchronisation entre appareils** : utilise **Réglages → Exporter / Importer** pour passer de l'iPhone à l'ordinateur.
+- **Synchronisation iPhone ↔ ordinateur** : bouton **Synchro** en haut, à configurer une fois dans **Mémo → Réglages** (dépôt privé `superviseur-data` + jeton GitHub). Données chiffrées. Sans ça : **Exporter / Importer**.
 - **Dictée** : utilise le micro du clavier de l'iPhone. L'analyse de la déclaration se fait sur l'appareil, par mots-clés : vérifie toujours le fait proposé.
 - **Effacement des données** : supprimer l'appli de l'écran d'accueil ou effacer les données de Safari efface les incidents et le journal de l'appareil. Exporte régulièrement.
 - **Aide-mémoire** : la référence reste le Référentiel unique. Contenu en **diffusion restreinte** : partage soumis à l'accord de ta hiérarchie.
